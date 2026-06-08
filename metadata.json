@@ -1,0 +1,6 @@
+{
+  "name": "小学生卡通日历",
+  "description": "一款专为小学生设计的卡通风格网页版日历应用，支持打卡、课程表、提醒、常规事项、时间冲突高亮及跨视图鼠标拖拽等功能。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
