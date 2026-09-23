@@ -1,1677 +1,1232 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>公主的皇家时间魔法盒 👸</title>
-    <!-- Stylesheets & Fonts -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Quicksand:wght@500;600;700&display=swap" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        serif: ['Cinzel', 'Georgia', 'serif'],
-                        sans: ['Quicksand', 'system-ui', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @keyframes royalpulse {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(236,72,153,0.4)); }
-            50% { transform: scale(1.02); filter: drop-shadow(0 0 12px rgba(251,191,36,0.7)); }
-        }
-        .animate-royal-sparkle {
-            animation: royalpulse 4s infinite ease-in-out;
-        }
-        .scrollbar-thin::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-track {
-            background: rgba(253, 224, 71, 0.1);
-            border-radius: 10px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: rgba(236, 72, 153, 0.3);
-            border-radius: 10px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-            background: rgba(236, 72, 153, 0.6);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#b98cff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="星星日记">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>星星日记 · 打卡与奖励</title>
+<style>
+  :root {
+    --primary: #a879ff;
+    --primary-2: #ff9ec4;
+    --primary-soft: #f4ecff;
+    --pink-soft: #ffeef6;
+    --mint: #4fc48d;
+    --mint-soft: #e7faf0;
+    --accent: #ffab4d;
+    --accent-soft: #fff3e3;
+    --danger: #ff7b8a;
+    --bg: #fdf7ff;
+    --card: #ffffff;
+    --text: #4b3c60;
+    --text-2: #a294b8;
+    --border: #f3e8fb;
+    --shadow: 0 8px 24px rgba(180, 140, 220, .16);
+    --radius: 22px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --font: ui-rounded, "SF Pro Rounded", "Hiragino Sans GB", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary-soft: #33254d;
+      --pink-soft: #3a2740;
+      --mint-soft: #24413a;
+      --accent-soft: #3d2f22;
+      --bg: #1a1522;
+      --card: #241d31;
+      --text: #f3ecff;
+      --text-2: #9d90b3;
+      --border: #342a45;
+      --shadow: 0 8px 24px rgba(0, 0, 0, .4);
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg); color: var(--text);
+    overscroll-behavior-y: none;
+    font-weight: 600;
+    letter-spacing: .2px;
+  }
+  /* 背景糖霜光斑 */
+  body::before {
+    content: ""; position: fixed; inset: -10% -10% auto -10%; height: 60vh; z-index: -1;
+    background:
+      radial-gradient(38vw 30vh at 12% 8%, rgba(255, 184, 216, .55), transparent 70%),
+      radial-gradient(34vw 26vh at 88% 4%, rgba(186, 156, 255, .45), transparent 70%),
+      radial-gradient(30vw 26vh at 60% 32%, rgba(168, 232, 255, .38), transparent 70%);
+    filter: blur(4px); pointer-events: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    body::before { opacity: .3; }
+  }
+
+  .app { max-width: 1080px; margin: 0 auto; padding: 14px 14px calc(100px + var(--safe-bottom)); min-height: 100vh; }
+  .page { display: none; animation: pop .3s cubic-bezier(.22, 1.2, .4, 1); }
+  .page.active { display: block; }
+  @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+
+  /* ===== 顶栏 ===== */
+  header.topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 4px 14px; }
+  .topbar .tt { min-width: 0; }
+  .topbar h1 { font-size: 21px; font-weight: 800; letter-spacing: .5px; }
+  .topbar .sub { font-size: 12px; color: var(--text-2); margin-top: 2px; font-weight: 600; }
+  .points-chip {
+    display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+    background: linear-gradient(135deg, #ffb3d1, #b98cff);
+    color: #fff; font-weight: 800; font-size: 14px;
+    padding: 9px 15px; border-radius: 999px;
+    box-shadow: 0 6px 18px rgba(185, 140, 255, .38);
+  }
+
+  /* ===== 卡片 ===== */
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px;
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 15px; font-weight: 800; margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .grid-2 { margin-bottom: 14px; }
+  @media (min-width: 760px) {
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+    .grid-2 > .card { margin-bottom: 0; }
+  }
+
+  /* ===== 日历 ===== */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-head .month-label {
+    font-size: 17px; font-weight: 800;
+    background: linear-gradient(135deg, #ff8fc0, #a879ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .nav-btn {
+    width: 38px; height: 38px; border: none; border-radius: 50%;
+    background: var(--primary-soft); color: var(--primary);
+    font-size: 18px; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-family: var(--font);
+    transition: transform .15s;
+  }
+  .nav-btn:active { transform: scale(.9); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-grid .dow { text-align: center; font-size: 11px; color: var(--text-2); padding: 4px 0; font-weight: 800; }
+  .day {
+    aspect-ratio: 1; border-radius: 50%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-size: 13px; position: relative;
+    background: transparent; color: var(--text); margin: 1px;
+  }
+  .day .num { font-weight: 700; }
+  .day .mark { font-size: 8px; margin-top: 1px; font-weight: 800; }
+  .day.today { box-shadow: inset 0 0 0 2.5px var(--primary-2); }
+  .day.today .num { color: var(--primary); font-weight: 800; }
+  .day.full {
+    background: linear-gradient(135deg, #ffb3d1, #b98cff);
+    color: #fff; box-shadow: 0 4px 10px rgba(185, 140, 255, .35);
+  }
+  .day.full .mark::after { content: "✓"; }
+  .day.partial { background: var(--pink-soft); box-shadow: inset 0 0 0 1.5px #ffcbe2; }
+  .day.partial .mark::after { content: "·"; color: var(--primary-2); font-size: 15px; line-height: .5; }
+  .day.other { color: var(--text-2); opacity: .35; }
+  .cal-legend { display: flex; gap: 14px; margin-top: 12px; font-size: 11px; color: var(--text-2); flex-wrap: wrap; font-weight: 600; }
+  .cal-legend i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+
+  /* ===== 圆环进度 & 统计 ===== */
+  .ring-wrap { position: relative; width: 148px; height: 148px; margin: 4px auto 12px; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-wrap .ring-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .ring-center .big { font-size: 30px; font-weight: 800; color: var(--primary); line-height: 1; }
+  .ring-center .small { font-size: 11px; color: var(--text-2); margin-top: 4px; font-weight: 700; }
+  .encourage {
+    text-align: center; font-size: 14px; font-weight: 800; color: var(--primary);
+    background: var(--primary-soft); border-radius: 999px; padding: 9px 16px;
+    margin: 0 auto 14px; width: fit-content; max-width: 100%;
+  }
+  .stat-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .stat-pill {
+    flex: 1; min-width: 84px; text-align: center; padding: 12px 8px;
+    background: var(--primary-soft); border-radius: 18px;
+  }
+  .stat-pill.alt { background: var(--pink-soft); }
+  .stat-pill.alt2 { background: var(--accent-soft); }
+  .stat-pill .v { font-size: 21px; font-weight: 800; color: var(--primary); }
+  .stat-pill.alt .v { color: #f0729f; }
+  .stat-pill.alt2 .v { color: var(--accent); }
+  .stat-pill .l { font-size: 11px; color: var(--text-2); margin-top: 2px; font-weight: 700; }
+
+  /* ===== 事项列表 ===== */
+  .task-list { display: flex; flex-direction: column; gap: 10px; }
+  .task-item, .bonus-item {
+    display: flex; align-items: center; gap: 11px;
+    border-radius: 18px; padding: 12px 13px;
+    background: linear-gradient(135deg, #ffffff, #fdf7ff);
+    border: 1.5px solid var(--border);
+  }
+  .bonus-item { background: linear-gradient(135deg, #ffffff, #fff8f2); }
+  @media (prefers-color-scheme: dark) {
+    .task-item { background: linear-gradient(135deg, var(--card), #2a2138); }
+    .bonus-item { background: linear-gradient(135deg, var(--card), #2c2536); }
+  }
+  .task-item .t-icon, .bonus-item .t-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, #ffe4f1, #eee0ff);
+    display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+  }
+  .bonus-item .t-icon { background: linear-gradient(135deg, #fff0d9, #ffe4f1); }
+  .task-item .t-info, .bonus-item .t-info { flex: 1; min-width: 0; cursor: pointer; }
+  .task-item .t-name, .bonus-item .t-name {
+    font-weight: 800; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .task-item .t-meta, .bonus-item .t-meta { font-size: 11.5px; color: var(--text-2); margin-top: 3px; font-weight: 700; }
+  .task-item .t-meta .pts, .bonus-item .t-meta .pts { color: var(--accent); font-weight: 800; }
+  .task-item.done { opacity: .68; }
+  .check-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2.5px dashed #e2d3f5; background: transparent;
+    cursor: pointer; font-size: 17px; color: transparent;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: all .2s cubic-bezier(.22, 1.2, .4, 1); font-family: var(--font);
+  }
+  .check-circle:active { transform: scale(.85); }
+  .check-circle.on {
+    background: linear-gradient(135deg, #7fd6a8, #4fc48d);
+    border: 2.5px solid transparent; color: #fff;
+    box-shadow: 0 4px 12px rgba(79, 196, 141, .4);
+  }
+  .empty { text-align: center; color: var(--text-2); font-size: 13px; padding: 20px 0; font-weight: 600; }
+
+  /* ===== 按钮 ===== */
+  .btn {
+    border: none; border-radius: 999px; padding: 10px 18px; font-size: 13.5px; font-weight: 800;
+    cursor: pointer; background: linear-gradient(135deg, #ffb3d1, #b98cff);
+    color: #fff; font-family: var(--font);
+    box-shadow: 0 5px 14px rgba(185, 140, 255, .32);
+    transition: transform .15s;
+  }
+  .btn:active { transform: scale(.95); }
+  .btn:disabled { background: #eff0f5; color: #b9b3c7; box-shadow: none; cursor: not-allowed; }
+  .btn.ghost { background: var(--primary-soft); color: var(--primary); box-shadow: none; }
+  .btn.pink { background: linear-gradient(135deg, #ffc2d8, #ff8fb8); box-shadow: 0 5px 14px rgba(255, 143, 184, .3); }
+  .btn.mint { background: linear-gradient(135deg, #a8ebc8, #4fc48d); box-shadow: 0 5px 14px rgba(79, 196, 141, .3); }
+  .btn.danger-ghost {
+    background: transparent; color: var(--danger); border: 1.5px solid #ffc9d0;
+    padding: 6px 12px; font-size: 12px; box-shadow: none;
+  }
+  .btn.small { padding: 8px 14px; font-size: 12.5px; }
+  .btn-row { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 14px; }
+
+  /* ===== 兑换 ===== */
+  .reward-list { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 700px) { .reward-list { grid-template-columns: repeat(2, 1fr); } }
+  .reward-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    border-radius: 18px; padding: 13px 14px;
+    background: linear-gradient(135deg, #ffffff, var(--pink-soft));
+    border: 1.5px solid var(--border);
+  }
+  @media (prefers-color-scheme: dark) { .reward-item { background: linear-gradient(135deg, var(--card), #2f2237); } }
+  .reward-item .info .name { font-weight: 800; font-size: 14.5px; }
+  .reward-item .info .cost { font-size: 12px; color: var(--accent); font-weight: 800; margin-top: 3px; }
+  .reward-item .ops { display: flex; gap: 7px; align-items: center; }
+
+  /* ===== 记录 ===== */
+  .record-list { display: flex; flex-direction: column; gap: 8px; }
+  .record {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    font-size: 13.5px; padding: 11px 13px; border-radius: 16px;
+    background: var(--primary-soft); font-weight: 700;
+  }
+  .record:nth-child(even) { background: var(--pink-soft); }
+  .record .t { color: var(--text-2); font-size: 11px; font-weight: 600; margin-top: 2px; }
+  .record .pts { font-weight: 800; color: var(--mint); white-space: nowrap; }
+  .record .pts.neg { color: var(--danger); }
+
+  /* ===== 底部导航（悬浮胶囊） ===== */
+  nav.tabbar {
+    position: fixed; left: 12px; right: 12px; bottom: calc(10px + var(--safe-bottom)); z-index: 50;
+    display: flex; justify-content: space-around; gap: 4px;
+    max-width: 560px; margin: 0 auto;
+    background: rgba(255, 255, 255, .88); backdrop-filter: blur(14px);
+    border: 1.5px solid var(--border);
+    border-radius: 999px; padding: 7px 8px;
+    box-shadow: 0 10px 30px rgba(180, 140, 220, .22);
+  }
+  @media (prefers-color-scheme: dark) { nav.tabbar { background: rgba(36, 29, 49, .9); } }
+  .tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px;
+    font-size: 10.5px; color: var(--text-2); cursor: pointer; padding: 6px 2px;
+    border: none; background: none; font-family: var(--font); font-weight: 800;
+    border-radius: 999px; transition: all .2s;
+  }
+  .tab .ico { font-size: 20px; line-height: 1.15; }
+  .tab.active { color: var(--primary); background: linear-gradient(135deg, var(--pink-soft), var(--primary-soft)); }
+
+  /* ===== 弹窗 ===== */
+  .modal-mask {
+    position: fixed; inset: 0; background: rgba(75, 60, 96, .42); z-index: 100;
+    display: none; align-items: flex-end; justify-content: center;
+    backdrop-filter: blur(3px);
+  }
+  .modal-mask.show { display: flex; }
+  .modal {
+    background: var(--card); width: 100%; max-width: 480px; max-height: 88vh; overflow-y: auto;
+    border-radius: 26px 26px 0 0; padding: 20px 18px calc(24px + var(--safe-bottom));
+    animation: slideUp .3s cubic-bezier(.22, 1.2, .4, 1);
+    border: 1.5px solid var(--border);
+  }
+  @media (min-width: 700px) {
+    .modal-mask { align-items: center; }
+    .modal { border-radius: 26px; }
+  }
+  @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal h3 { font-size: 16px; font-weight: 800; margin-bottom: 15px; }
+  .modal input[type=text], .modal input[type=number] {
+    width: 100%; padding: 13px 15px; border: 1.5px solid var(--border); border-radius: 16px;
+    font-size: 15px; background: var(--bg); color: var(--text); margin-bottom: 11px;
+    font-family: var(--font); font-weight: 700;
+  }
+  .modal input::placeholder { color: #c9bcd9; font-weight: 600; }
+  .modal input:focus { outline: 2.5px solid var(--primary-2); outline-offset: 1px; border-color: transparent; }
+  .modal .field-label { font-size: 12px; color: var(--text-2); margin: 3px 0 6px; font-weight: 800; }
+  .modal .row { display: flex; gap: 9px; }
+  .modal .row .btn { flex: 1; padding: 13px; font-size: 15px; }
+
+  .seg { display: flex; gap: 8px; margin-bottom: 12px; }
+  .seg button {
+    flex: 1; padding: 11px; border-radius: 999px; border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text-2); font-size: 13.5px; cursor: pointer;
+    font-family: var(--font); font-weight: 800; transition: all .18s;
+  }
+  .seg button.on {
+    background: linear-gradient(135deg, #ffb3d1, #b98cff); color: #fff; border-color: transparent;
+    box-shadow: 0 4px 12px rgba(185, 140, 255, .3);
+  }
+  .week-chips { display: flex; gap: 7px; margin-bottom: 12px; }
+  .week-chips button {
+    flex: 1; aspect-ratio: 1; border-radius: 50%; border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text-2); font-size: 13px; cursor: pointer;
+    font-family: var(--font); font-weight: 800; transition: all .18s;
+  }
+  .week-chips button.on { background: linear-gradient(135deg, #ffb3d1, #b98cff); color: #fff; border-color: transparent; }
+
+  .makeup-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px; }
+  .makeup-day {
+    aspect-ratio: 1; border-radius: 50%; border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--text); font-size: 12.5px; cursor: pointer; font-family: var(--font); font-weight: 800;
+  }
+  .makeup-day:disabled { opacity: .28; cursor: not-allowed; }
+  .makeup-day.selected { background: linear-gradient(135deg, #ffb3d1, #b98cff); color: #fff; border-color: transparent; }
+  .makeup-task {
+    display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-radius: 14px;
+    background: var(--primary-soft); margin-bottom: 7px; font-size: 13.5px; font-weight: 700;
+  }
+  .makeup-task input { width: 19px; height: 19px; accent-color: var(--primary); }
+
+  /* ===== toast & 撒花 ===== */
+  #toast {
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-24px) scale(.9);
+    background: linear-gradient(135deg, #ffb3d1, #b98cff); color: #fff;
+    padding: 12px 22px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 800; z-index: 200; opacity: 0; pointer-events: none;
+    transition: all .32s cubic-bezier(.22, 1.2, .4, 1); max-width: 88vw; text-align: center;
+    box-shadow: 0 8px 22px rgba(185, 140, 255, .4);
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+  #fx { position: fixed; inset: 0; pointer-events: none; z-index: 300; overflow: hidden; }
+  .fx-item { position: absolute; top: 22vh; font-size: 20px; animation: fall 1.5s cubic-bezier(.3, .7, .6, 1) forwards; }
+  @keyframes fall {
+    0% { transform: translateY(-10vh) rotate(0) scale(.6); opacity: 0; }
+    25% { opacity: 1; }
+    100% { transform: translateY(55vh) rotate(320deg) scale(1.1); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
 </head>
-<body class="bg-gradient-to-b from-pink-100 via-purple-100 to-pink-50 min-h-screen selection:bg-pink-300">
-    <div id="root"></div>
+<body>
 
-    <!-- CDN Libraries -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<div class="app">
+  <header class="topbar">
+    <div class="tt">
+      <h1 id="pageTitle">🌸 日历</h1>
+      <div class="sub" id="todayLabel"></div>
+    </div>
+    <div class="points-chip" id="pointsChip">⭐ 0 星星</div>
+  </header>
 
-    <!-- App Execution Block -->
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+  <!-- 页面1：日历 -->
+  <section class="page active" id="page-calendar">
+    <div class="grid-2">
+      <div class="card">
+        <div class="cal-head">
+          <button class="nav-btn" id="prevMonth">‹</button>
+          <div class="month-label" id="monthLabel"></div>
+          <button class="nav-btn" id="nextMonth">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legend">
+          <span><i style="background:linear-gradient(135deg,#ffb3d1,#b98cff)"></i>全部完成</span>
+          <span><i style="background:#ffeef6;box-shadow:inset 0 0 0 1.5px #ffcbe2"></i>完成一部分</span>
+          <span><i style="box-shadow:inset 0 0 0 2.5px #ff9ec4"></i>今天</span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🎀 我的成绩单</h2>
+        <div class="ring-wrap">
+          <svg width="148" height="148" viewBox="0 0 148 148">
+            <defs>
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffb3d1"/>
+                <stop offset="100%" stop-color="#a879ff"/>
+              </linearGradient>
+            </defs>
+            <circle cx="74" cy="74" r="64" fill="none" stroke="var(--border)" stroke-width="13"/>
+            <circle id="ringArc" cx="74" cy="74" r="64" fill="none" stroke="url(#ringGrad)"
+                    stroke-width="13" stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402"/>
+          </svg>
+          <div class="ring-center">
+            <div class="big" id="monthRate">0%</div>
+            <div class="small">本月完成率</div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-pill"><div class="v" id="statMonthFull">0</div><div class="l">本月全勤</div></div>
+          <div class="stat-pill alt"><div class="v" id="statBest">0</div><div class="l">最长连击</div></div>
+          <div class="stat-pill alt2"><div class="v" id="statTotal">0</div><div class="l">累计完成</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        // Custom Inline SVGs to bypass heavy lucide icons UMD bundles dependency
-        function Icon({ name, className = "w-4 h-4" }) {
-            const symbols = {
-                ChevronLeft: <path d="m15 18-6-6 6-6"/>,
-                ChevronRight: <path d="m9 18 6-6-6-6"/>,
-                Plus: <path d="M5 12h14M12 5v14"/>,
-                HelpCircle: (
-                    <>
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                        <path d="M12 17h.01"/>
-                    </>
-                ),
-                Star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>,
-                Sparkles: <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>,
-                BookOpen: <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zm20 0h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>,
-                Heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>,
-                Trophy: (
-                    <>
-                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-                        <path d="M4 22h16"/>
-                        <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"/>
-                        <path d="M12 2a7 7 0 0 0-7 7v3.5a5 5 0 0 0 10 0V9a7 7 0 0 0-7-7z"/>
-                    </>
-                ),
-                Smile: (
-                    <>
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                        <line x1="9" y1="9" x2="9.01" y2="9"/>
-                        <line x1="15" y1="9" x2="15.01" y2="9"/>
-                    </>
-                ),
-                CheckCircle2: (
-                    <>
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="m9 12 2 2 4-4"/>
-                    </>
-                ),
-                CalendarDays: (
-                    <>
-                        <path d="M8 2v4M16 2v4"/>
-                        <rect width="18" height="18" x="3" y="4" rx="2"/>
-                        <path d="M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
-                    </>
-                ),
-                Percent: (
-                    <>
-                        <line x1="19" y1="5" x2="5" y2="19"/>
-                        <circle cx="6.5" cy="6.5" r="2.5"/>
-                        <circle cx="17.5" cy="17.5" r="2.5"/>
-                    </>
-                ),
-                Clock: (
-                    <>
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                    </>
-                ),
-                AlertCircle: (
-                    <>
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </>
-                ),
-                Trash2: (
-                    <>
-                        <path d="M3 6h18"/>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                        <line x1="10" y1="11" x2="10" y2="17"/>
-                        <line x1="14" y1="11" x2="14" y2="17"/>
-                    </>
-                ),
-                X: <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2" />,
-                Circle: <circle cx="12" cy="12" r="10"/>,
-                CheckSquare: (
-                    <>
-                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
-                        <path d="m9 12 2 2 4-4"/>
-                    </>
-                ),
-                MapPin: (
-                    <>
-                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                        <circle cx="12" cy="10" r="3"/>
-                    </>
-                ),
-                User: (
-                    <>
-                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                    </>
-                )
-            };
-            return (
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={className}
-                >
-                    {symbols[name] || null}
-                </svg>
-            );
+  <!-- 页面2：打卡 -->
+  <section class="page" id="page-checkin">
+    <div class="grid-2">
+      <div class="card">
+        <div class="ring-wrap">
+          <svg width="148" height="148" viewBox="0 0 148 148">
+            <defs>
+              <linearGradient id="ringGrad2" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffc9e0"/>
+                <stop offset="100%" stop-color="#4fc48d"/>
+              </linearGradient>
+            </defs>
+            <circle cx="74" cy="74" r="64" fill="none" stroke="var(--border)" stroke-width="13"/>
+            <circle id="todayArc" cx="74" cy="74" r="64" fill="none" stroke="url(#ringGrad2)"
+                    stroke-width="13" stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402"/>
+          </svg>
+          <div class="ring-center">
+            <div class="big" id="todayDone">0/0</div>
+            <div class="small">今日完成</div>
+          </div>
+        </div>
+        <div class="encourage" id="encourage">新的一天，从一个小目标开始吧 ✨</div>
+        <div class="stat-row">
+          <div class="stat-pill alt"><div class="v" id="streakNow">0</div><div class="l">连续全勤 🔥</div></div>
+          <div class="stat-pill"><div class="v" id="pointsMain">0</div><div class="l">我的星星 ⭐</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📋 今天要做的事 <button class="btn ghost small" id="addTaskBtn">＋ 新事项</button></h2>
+        <div class="task-list" id="todayTaskList"></div>
+        <div class="btn-row">
+          <button class="btn pink small" id="customBtn">✨ 临时加分 / 扣分</button>
+          <button class="btn ghost small" id="makeupBtn">🗓️ 补卡（-20 星星）</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📜 我的小记录</h2>
+      <div class="record-list" id="recordList"></div>
+    </div>
+  </section>
+
+  <!-- 页面3：奖励（非打卡事项） -->
+  <section class="page" id="page-bonus">
+    <div class="grid-2">
+      <div class="card">
+        <h2>🏆 奖励小清单 <button class="btn ghost small" id="addBonusBtn">＋ 新奖励</button></h2>
+        <div class="task-list" id="bonusList"></div>
+        <div class="btn-row">
+          <button class="btn pink small" id="customBtn2">✨ 临时加分 / 扣分</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🌟 这个月赚到的星星</h2>
+        <div class="stat-row" style="margin-bottom:16px">
+          <div class="stat-pill alt2"><div class="v" id="bonusMonth">0</div><div class="l">本月奖励星星</div></div>
+          <div class="stat-pill"><div class="v" id="bonusCount">0</div><div class="l">奖励次数</div></div>
+          <div class="stat-pill alt"><div class="v" id="pointsMain2">0</div><div class="l">我的星星 ⭐</div></div>
+        </div>
+        <h2>📜 奖励记录</h2>
+        <div class="record-list" id="bonusRecords"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页面4：兑换 -->
+  <section class="page" id="page-shop">
+    <div class="card">
+      <h2>🎁 小心愿兑换店 <button class="btn ghost small" id="addRewardBtn">＋ 新心愿</button></h2>
+      <div class="reward-list" id="rewardList"></div>
+    </div>
+    <div class="card">
+      <h2>🧾 兑换记录</h2>
+      <div class="record-list" id="redeemList"></div>
+    </div>
+  </section>
+</div>
+
+<nav class="tabbar">
+  <button class="tab active" data-page="page-calendar"><span class="ico">🌸</span>日历</button>
+  <button class="tab" data-page="page-checkin"><span class="ico">✅</span>打卡</button>
+  <button class="tab" data-page="page-bonus"><span class="ico">🏆</span>奖励</button>
+  <button class="tab" data-page="page-shop"><span class="ico">🎀</span>兑换</button>
+</nav>
+
+<!-- 事项编辑弹窗 -->
+<div class="modal-mask" id="taskModal">
+  <div class="modal">
+    <h3 id="taskModalTitle">✨ 新增打卡事项</h3>
+    <div class="field-label">事项名称</div>
+    <input type="text" id="taskName" placeholder="比如：阅读 30 分钟" maxlength="20">
+    <div class="field-label">选一个图标吧</div>
+    <input type="text" id="taskIcon" placeholder="比如 📖（不填就是 ✅）" maxlength="4">
+    <div class="field-label">完成一次奖励多少星星</div>
+    <input type="number" id="taskPoints" placeholder="比如 10" min="1">
+    <div class="field-label">多久做一次</div>
+    <div class="seg">
+      <button id="freqDaily" class="on" type="button">每天都要</button>
+      <button id="freqWeek" type="button">只在某些天</button>
+    </div>
+    <div class="week-chips" id="weekChips" style="display:none"></div>
+    <div class="row">
+      <button class="btn ghost" id="taskCancel">取消</button>
+      <button class="btn" id="taskSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 奖励项目编辑弹窗 -->
+<div class="modal-mask" id="bonusModal">
+  <div class="modal">
+    <h3 id="bonusModalTitle">🏆 新增奖励项目</h3>
+    <div class="field-label">奖励名称</div>
+    <input type="text" id="bonusName" placeholder="比如：考试 100 分 💯" maxlength="24">
+    <div class="field-label">选一个图标吧</div>
+    <input type="text" id="bonusIcon" placeholder="比如 🏆（不填就是 🏆）" maxlength="4">
+    <div class="field-label">奖励多少星星（扣分就填负数）</div>
+    <input type="number" id="bonusPoints" placeholder="比如 50，或 -5">
+    <div class="row">
+      <button class="btn ghost" id="bonusCancel">取消</button>
+      <button class="btn" id="bonusSave">保存</button>
+    </div>
+    <div id="bonusDelWrap"></div>
+  </div>
+</div>
+
+<!-- 临时加减分弹窗 -->
+<div class="modal-mask" id="customModal">
+  <div class="modal">
+    <h3>✨ 临时加分 / 扣分</h3>
+    <div class="field-label">做了什么事</div>
+    <input type="text" id="customName" placeholder="比如：帮妈妈拎东西" maxlength="20">
+    <div class="field-label">加多少星星（扣分填负数，如 -5）</div>
+    <input type="number" id="customPoints" placeholder="比如 15">
+    <div class="row">
+      <button class="btn ghost" id="customCancel">取消</button>
+      <button class="btn" id="customSave">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 补卡弹窗 -->
+<div class="modal-mask" id="makeupModal">
+  <div class="modal">
+    <h3>🗓️ 补卡 · 先选日期（-20 星星）</h3>
+    <div class="makeup-days" id="makeupDays"></div>
+    <div class="field-label">勾选要补上的事项</div>
+    <div id="makeupTasks"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn ghost" id="makeupCancel">取消</button>
+      <button class="btn" id="makeupConfirm">补上啦</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="fx"></div>
+
+<script>
+/* ================= 数据层 ================= */
+const STORE_KEY = "checkin_pwa_v2";
+const pad = (n) => String(n).padStart(2, "0");
+const dateStr = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const todayS = () => dateStr(new Date());
+const uid = () => "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const WEEK_CN = ["日", "一", "二", "三", "四", "五", "六"];
+
+const defaultData = () => ({
+  tasks: [
+    { id: "d1", name: "每日打卡", icon: "✅", points: 10, freqType: "daily", freqDays: [] },
+  ],
+  checkins: {},   // { "2026-09-22": { taskId: { points, ts } } }
+  points: 0,
+  bonuses: [
+    { id: "b1", name: "考试 100 分", icon: "💯", points: 50 },
+    { id: "b2", name: "考试 90 分以上", icon: "🏆", points: 30 },
+    { id: "b3", name: "被老师夸夸啦", icon: "🌟", points: 20 },
+    { id: "b4", name: "主动帮忙做家务", icon: "🧹", points: 10 },
+    { id: "b5", name: "一天没玩手机", icon: "📵", points: 20 },
+    { id: "b6", name: "乱发脾气（扣分）", icon: "😤", points: -5 },
+  ],
+  rewards: [
+    { id: "r1", name: "🎮 多玩 30 分钟游戏", cost: 50 },
+    { id: "r2", name: "🍿 看一部电影", cost: 100 },
+    { id: "r3", name: "🍰 吃一份甜品", cost: 150 },
+    { id: "r4", name: "🛍️ 一个心愿小礼物", cost: 300 },
+  ],
+  redeems: [],
+  records: [],    // { date, desc, icon, points, type }
+});
+
+let db;
+try {
+  const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+  if (raw && raw.tasks) {
+    db = Object.assign(defaultData(), raw);
+  } else {
+    // 从 v1（单事项）迁移：旧数据转成「每日打卡」事项
+    db = defaultData();
+    const old = JSON.parse(localStorage.getItem("checkin_pwa_v1") || "null");
+    if (old && old.checkins) {
+      db.points = old.points || 0;
+      if (old.rewards) db.rewards = old.rewards;
+      if (old.redeems) db.redeems = old.redeems;
+      if (old.records) db.records = old.records.map(r => Object.assign(r, { icon: "✅" }));
+      for (const d of Object.keys(old.checkins)) {
+        db.checkins[d] = { d1: { points: 10, ts: new Date().toISOString() } };
+      }
+    }
+  }
+} catch (e) { db = defaultData(); }
+const save = () => localStorage.setItem(STORE_KEY, JSON.stringify(db));
+
+/* ================= 业务逻辑 ================= */
+const getTask = (id) => db.tasks.find(t => t.id === id);
+const getBonus = (id) => db.bonuses.find(b => b.id === id);
+const isFuture = (s) => s > todayS();
+
+function taskDueOn(task, s) {
+  if (task.freqType === "daily") return true;
+  return task.freqDays.includes(new Date(s + "T00:00:00").getDay());
+}
+const dueTasksOn = (s) => db.tasks.filter(t => taskDueOn(t, s));
+const taskDone = (s, id) => !!(db.checkins[s] && db.checkins[s][id]);
+
+function dayStatus(s) {
+  if (isFuture(s)) return { due: 0, done: 0 };
+  const due = dueTasksOn(s);
+  const done = due.filter(t => taskDone(s, t.id));
+  return { due: due.length, done: done.length };
+}
+
+function calcStreak() {
+  let streak = 0;
+  const d = new Date();
+  const today = dayStatus(todayS());
+  if (!(today.due > 0 && today.done === today.due)) d.setDate(d.getDate() - 1);
+  while (d.getFullYear() > 2000) {
+    const st = dayStatus(dateStr(d));
+    if (st.due > 0 && st.done === st.due) { streak++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  return streak;
+}
+
+function calcBestStreak() {
+  let best = 0, cur = 0, prev = null;
+  for (const s of Object.keys(db.checkins).sort()) {
+    const st = dayStatus(s);
+    if (st.due > 0 && st.done === st.due) {
+      cur = prev && (new Date(s) - new Date(prev)) === 86400000 ? cur + 1 : 1;
+      best = Math.max(best, cur);
+      prev = s;
+    } else { prev = null; cur = 0; }
+  }
+  return best;
+}
+
+function countTotalDone() {
+  let n = 0;
+  for (const d of Object.values(db.checkins)) n += Object.keys(d).length;
+  return n;
+}
+
+function doTaskCheckin(s, taskId, makeup = false) {
+  if (taskDone(s, taskId)) return false;
+  const task = getTask(taskId);
+  if (!task) return false;
+  let cost = 0;
+  if (makeup) {
+    if (db.points < 20) return "nopoints";
+    cost = 20; db.points -= 20;
+  }
+  db.checkins[s] = db.checkins[s] || {};
+  db.checkins[s][taskId] = { points: task.points, ts: new Date().toISOString() };
+  db.points += task.points;
+  db.records.unshift({
+    date: new Date().toISOString(),
+    desc: makeup ? `补卡 ${s} · ${task.name}` : task.name,
+    icon: task.icon || "✅",
+    points: task.points - cost,
+    type: makeup ? "makeup" : "task",
+  });
+  if (db.records.length > 200) db.records.length = 200;
+  save();
+  return true;
+}
+
+function undoTaskCheckin(s, taskId) {
+  const rec = db.checkins[s] && db.checkins[s][taskId];
+  if (!rec) return;
+  const task = getTask(taskId);
+  delete db.checkins[s][taskId];
+  if (!Object.keys(db.checkins[s]).length) delete db.checkins[s];
+  db.points -= rec.points;
+  db.records.unshift({ date: new Date().toISOString(), desc: `取消 · ${task ? task.name : "事项"}`, icon: "↩️", points: -rec.points, type: "undo" });
+  save();
+}
+
+function addCustom(name, pts) {
+  db.points += pts;
+  db.records.unshift({ date: new Date().toISOString(), desc: name, icon: pts >= 0 ? "✨" : "➖", points: pts, type: "custom" });
+  if (db.records.length > 200) db.records.length = 200;
+  save();
+}
+
+/* ---- 非打卡奖励 ---- */
+function awardBonus(id) {
+  const b = getBonus(id);
+  if (!b) return null;
+  db.points += b.points;
+  const rec = {
+    id: uid(), date: new Date().toISOString(), desc: b.name,
+    icon: b.icon || "🏆", points: b.points, type: "bonus", refId: b.id,
+  };
+  db.records.unshift(rec);
+  if (db.records.length > 200) db.records.length = 200;
+  save();
+  return rec;
+}
+
+function undoBonus(recId) {
+  const i = db.records.findIndex(r => r.id === recId);
+  if (i < 0) return false;
+  db.points -= db.records[i].points;
+  db.records.splice(i, 1);
+  save();
+  return true;
+}
+
+function bonusMonthPoints() {
+  const now = new Date();
+  let sum = 0;
+  for (const r of db.records) {
+    if (r.type !== "bonus") continue;
+    const d = new Date(r.date);
+    if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) sum += r.points;
+  }
+  return sum;
+}
+const bonusTimes = () => db.records.filter(r => r.type === "bonus").length;
+
+/* ================= UI ================= */
+const $ = (id) => document.getElementById(id);
+
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* 撒花庆祝 */
+function party(emojis = ["🌸", "⭐", "✨", "💖", "🎉", "🍬"]) {
+  const layer = $("fx");
+  for (let i = 0; i < 16; i++) {
+    const s = document.createElement("span");
+    s.className = "fx-item";
+    s.textContent = emojis[i % emojis.length];
+    s.style.left = (6 + Math.random() * 86) + "vw";
+    s.style.fontSize = (15 + Math.random() * 16) + "px";
+    s.style.animationDelay = (Math.random() * .3).toFixed(2) + "s";
+    layer.appendChild(s);
+    setTimeout(() => s.remove(), 2200);
+  }
+}
+
+function setRing(el, ratio) {
+  if (!el) return;
+  const len = 402;
+  el.style.strokeDashoffset = String(len * (1 - Math.max(0, Math.min(1, ratio))));
+}
+
+function updatePointsUI() {
+  $("pointsChip").textContent = `⭐ ${db.points} 星星`;
+  $("pointsMain").textContent = db.points;
+  $("pointsMain2").textContent = db.points;
+  const today = dayStatus(todayS());
+  $("todayDone").textContent = `${today.done}/${today.due}`;
+  setRing($("todayArc"), today.due ? today.done / today.due : 0);
+  $("streakNow").textContent = calcStreak();
+  $("statTotal").textContent = countTotalDone();
+  $("statBest").textContent = calcBestStreak();
+  $("bonusMonth").textContent = bonusMonthPoints();
+  $("bonusCount").textContent = bonusTimes();
+
+  let msg;
+  if (!today.due) msg = "还没有安排事项哦，先定一个小目标吧 🎈";
+  else if (today.done === 0) msg = "新的一天，从一个小目标开始吧 ✨";
+  else if (today.done < today.due) msg = `已经完成 ${today.done} 项啦，继续加油 💪`;
+  else msg = "今天全部完成，你也太棒了吧 🎉";
+  $("encourage").textContent = msg;
+
+  const now = new Date();
+  $("todayLabel").textContent = `${now.getMonth()+1} 月 ${now.getDate()} 日 · 星期${WEEK_CN[now.getDay()]}`;
+}
+
+/* ---- 日历 ---- */
+let viewYear, viewMonth;
+(function () { const n = new Date(); viewYear = n.getFullYear(); viewMonth = n.getMonth(); })();
+
+function renderCalendar() {
+  $("monthLabel").textContent = `${viewYear} 年 ${viewMonth + 1} 月`;
+  const cells = [];
+  const startDow = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const prevDays = new Date(viewYear, viewMonth, 0).getDate();
+  for (let i = startDow - 1; i >= 0; i--) {
+    const m = viewMonth === 0 ? 12 : viewMonth, y = viewMonth === 0 ? viewYear - 1 : viewYear;
+    cells.push({ s: `${y}-${pad(m)}-${pad(prevDays - i)}`, n: prevDays - i, other: true });
+  }
+  for (let d = 1; d <= daysInMonth; d++)
+    cells.push({ s: `${viewYear}-${pad(viewMonth + 1)}-${pad(d)}`, n: d });
+  while (cells.length % 7 !== 0) {
+    const d = cells.length - (startDow + daysInMonth) + 1;
+    const m = viewMonth === 11 ? 1 : viewMonth + 2, y = viewMonth === 11 ? viewYear + 1 : viewYear;
+    cells.push({ s: `${y}-${pad(m)}-${pad(d)}`, n: d, other: true });
+  }
+  $("calGrid").innerHTML = ["日","一","二","三","四","五","六"].map(d => `<div class="dow">${d}</div>`).join("") +
+    cells.map(c => {
+      const cls = ["day"];
+      if (c.other) cls.push("other");
+      if (c.s === todayS()) cls.push("today");
+      if (!c.other && !isFuture(c.s)) {
+        const st = dayStatus(c.s);
+        if (st.due > 0 && st.done === st.due) cls.push("full");
+        else if (st.done > 0) cls.push("partial");
+      }
+      return `<div class="${cls.join(" ")}"><span class="num">${c.n}</span><span class="mark"></span></div>`;
+    }).join("");
+
+  // 统计只从「开始使用的那天」算起，避免新用户一上来就是很低的百分比
+  const firstUsed = Object.keys(db.checkins).sort()[0] || todayS();
+  let full = 0, dueSum = 0, doneSum = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const s = `${viewYear}-${pad(viewMonth + 1)}-${pad(d)}`;
+    if (s > todayS() || s < firstUsed) continue;
+    const st = dayStatus(s);
+    if (st.due > 0 && st.done === st.due) full++;
+    dueSum += st.due; doneSum += st.done;
+  }
+  $("statMonthFull").textContent = full;
+  const rate = dueSum ? doneSum / dueSum : 0;
+  $("monthRate").textContent = Math.round(rate * 100) + "%";
+  setRing($("ringArc"), rate);
+}
+
+$("prevMonth").onclick = () => { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar(); };
+$("nextMonth").onclick = () => { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendar(); };
+
+/* ---- 今日打卡 ---- */
+function freqLabel(task) {
+  if (task.freqType === "daily") return "每天";
+  if (!task.freqDays.length) return "某些天";
+  return "每周" + task.freqDays.slice().sort().map(d => WEEK_CN[d]).join("、");
+}
+
+function renderToday() {
+  const list = $("todayTaskList");
+  const today = todayS();
+  const due = dueTasksOn(today);
+  if (!due.length) {
+    list.innerHTML = `<div class="empty">今天还没有要做的事，点「＋ 新事项」加一个吧 🎈</div>`;
+  } else {
+    list.innerHTML = due.map(t => {
+      const done = taskDone(today, t.id);
+      return `<div class="task-item ${done ? "done" : ""}">
+        <div class="t-icon">${t.icon || "✅"}</div>
+        <div class="t-info" data-edit="${t.id}">
+          <div class="t-name" ${done ? 'style="text-decoration:line-through;color:var(--text-2)"' : ""}>${t.name}</div>
+          <div class="t-meta">${freqLabel(t)} · <span class="pts">+${t.points} 星星</span></div>
+        </div>
+        <button class="check-circle ${done ? "on" : ""}" data-task="${t.id}" title="${done ? "点一下可以取消" : "点一下完成"}">✓</button>
+      </div>`;
+    }).join("");
+    list.querySelectorAll(".check-circle").forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.task;
+        if (taskDone(today, id)) {
+          if (confirm("要取消这一项、把星星还回去吗？")) {
+            undoTaskCheckin(today, id);
+            toast("已取消，星星还回去啦 ↩️");
+          }
+        } else {
+          doTaskCheckin(today, id);
+          const t = getTask(id);
+          const st = dayStatus(today);
+          if (st.due > 0 && st.done === st.due) {
+            party(["🎉", "🌸", "⭐", "💖", "✨"]);
+            toast("全部完成！今天超级棒 🎉");
+          } else {
+            party(["✨", "🌸", "⭐"]);
+            toast(`${t.icon || "✅"} ${t.name} 完成！+${t.points} 星星`);
+          }
         }
-
-        // CONSTANTS & HELPERS
-        const EVENT_COLORS = {
-            curriculum: { label: '课程表', bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700', fillColor: '#059669', emoji: '📚', hoverBg: 'hover:bg-emerald-100' },
-            daka: { label: '习惯打卡', bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-700', fillColor: '#7c3aed', emoji: '⭐', hoverBg: 'hover:bg-purple-100' },
-            reminder: { label: '每日提醒', bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-700', fillColor: '#d97706', emoji: '⏰', hoverBg: 'hover:bg-amber-100' },
-            regular: { label: '常规事项', bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-700', fillColor: '#2563eb', emoji: '🎈', hoverBg: 'hover:bg-blue-100' }
-        };
-
-        const USER_GUIDE = [
-            { emoji: '🎒', text: '加个课程：填写开始时间跟课程名字，课程字样就会变成翠绿色的噢！' },
-            { emoji: '⭐', text: '习惯打卡：写出你的好习惯，还可以在里面添加各个有趣的子任务噢！' },
-            { emoji: '⏰', text: '时间冲突高亮：如果同一时间段内写了两个计划，格子就会自动显示粉色占用状态！' },
-            { emoji: '🎯', text: '预计时间：可以给每个小梦想设定预计时间，每天收集统计星星进度！' },
-            { emoji: '🖐️', text: '鼠标拖放：在月视图、周视图、单日视图里，可以用鼠标拖动卡片到任意日期或小时哦！' }
-        ];
-
-        const PRINCESS_COURSES = ['皇家文学 📖', '优雅礼仪 👑', '魔法数学 📐', '星空探索 🔭', '皇家音律 🎵', '森林马术 🐎', '神奇绘画 🎨', '精灵英语 🔠', '人鱼游泳 🧜‍♀️', '古堡历史 🏰'];
-
-        function timeToMinutes(timeStr) {
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            return hours * 60 + minutes;
-        }
-
-        function minutesToTime(minutes) {
-            const hours = Math.floor(minutes / 60);
-            const mins = minutes % 60;
-            return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-        }
-
-        function formatDate(date) {
-            const y = date.getFullYear();
-            const m = (date.getMonth() + 1).toString().padStart(2, '0');
-            const d = date.getDate().toString().padStart(2, '0');
-            return `${y}-${m}-${d}`;
-        }
-
-        function getMonthDays(year, month) {
-            const firstDayOfMonth = new Date(year, month, 1);
-            const firstDayWeekday = firstDayOfMonth.getDay();
-            const startOffset = firstDayWeekday === 0 ? 6 : firstDayWeekday - 1;
-            const startDate = new Date(year, month, 1 - startOffset);
-            const days = [];
-            for (let i = 0; i < 42; i++) {
-                const day = new Date(startDate);
-                day.setDate(startDate.getDate() + i);
-                days.push(day);
-            }
-            return days;
-        }
-
-        function getWeekDays(date) {
-            const weekday = date.getDay();
-            const offset = weekday === 0 ? 6 : weekday - 1;
-            const monday = new Date(date);
-            monday.setDate(date.getDate() - offset);
-            const days = [];
-            for (let i = 0; i < 7; i++) {
-                const day = new Date(monday);
-                day.setDate(monday.getDate() + i);
-                days.push(day);
-            }
-            return days;
-        }
-
-        const TIME_SLOTS = [];
-        for (let h = 6; h <= 21; h++) {
-            TIME_SLOTS.push(`${h.toString().padStart(2, '0')}:00`);
-            TIME_SLOTS.push(`${h.toString().padStart(2, '0')}:30`);
-        }
-        TIME_SLOTS.push('22:00');
-
-        function isSlotOccupied(dateStr, timeStr, events) {
-            const slotStartMin = timeToMinutes(timeStr);
-            const slotEndMin = slotStartMin + 30;
-            const dayEvents = events.filter(e => e.date === dateStr);
-            for (const event of dayEvents) {
-                const eventStartMin = timeToMinutes(event.startTime);
-                const eventEndMin = eventStartMin + (event.estimatedDuration || 30);
-                if (Math.max(slotStartMin, eventStartMin) < Math.min(slotEndMin, eventEndMin)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        function hasDayConflicts(events, dateStr) {
-            const dayEvents = events.filter(e => e.date === dateStr);
-            const sortedEvents = dayEvents.sort((a, b) => a.startTime.localeCompare(b.startTime));
-            for (let i = 0; i < sortedEvents.length - 1; i++) {
-                const current = sortedEvents[i];
-                const next = sortedEvents[i + 1];
-                const aStartMin = timeToMinutes(current.startTime);
-                const aEndMin = aStartMin + (current.estimatedDuration || 30);
-                const bStartMin = timeToMinutes(next.startTime);
-                if (aEndMin > bStartMin) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // COMPONENT: CalendarHeader
-        function CalendarHeader({ viewMode, setViewMode, currentDate, setCurrentDate, onAddEventClick, events }) {
-            const handlePrevious = () => {
-                const nextDate = new Date(currentDate);
-                if (viewMode === 'month') nextDate.setMonth(currentDate.getMonth() - 1);
-                else if (viewMode === 'week') nextDate.setDate(currentDate.getDate() - 7);
-                else if (viewMode === 'day') nextDate.setDate(currentDate.getDate() - 1);
-                setCurrentDate(nextDate);
-            };
-
-            const handleNext = () => {
-                const nextDate = new Date(currentDate);
-                if (viewMode === 'month') nextDate.setMonth(currentDate.getMonth() + 1);
-                else if (viewMode === 'week') nextDate.setDate(currentDate.getDate() + 7);
-                else if (viewMode === 'day') nextDate.setDate(currentDate.getDate() + 1);
-                setCurrentDate(nextDate);
-            };
-
-            const todayStr = formatDate(new Date());
-            const todayEvents = events.filter(e => e.date === todayStr);
-            const doneToday = todayEvents.filter(e => e.completed).length;
-            const totalToday = todayEvents.length;
-
-            const getSmartQuote = () => {
-                if (totalToday === 0) return "✨ 皇家仙女~ 🪄 今天我的本子上干干净净的呢，今天你最想完成什么事？点击右侧记一笔魔法吧！";
-                if (doneToday === totalToday) return "✨ 仙女呼唤！🦭 你把今天的计划全部通关啦！太优秀了，今天可以尽情在城堡里看有趣的画本并玩耍啦！";
-                if (doneToday > 0) return `✨ 仙女~ 🪄 已完成 ${doneToday}/${totalToday} 个小任务！你现在状态绝佳，我们一起继续，击败剩下的计划吧！✊🧚‍♀️`;
-                return "✨ 城堡提示~ 😉 今天的魔法计划已列好！小主人，伸个懒腰，开始完成第一项小任务吧！";
-            };
-
-            const getHeaderTitleText = () => {
-                const y = currentDate.getFullYear();
-                const m = currentDate.getMonth() + 1;
-                if (viewMode === 'month') return `${y}年 ${m}月`;
-                if (viewMode === 'week') {
-                    const weekdays = getWeekDays(currentDate);
-                    return `${weekdays[0].getMonth() + 1}月${weekdays[0].getDate()}日 ~ ${weekdays[6].getMonth() + 1}月${weekdays[6].getDate()}日 (本周)`;
-                }
-                if (viewMode === 'day') return `${y}年${m}月${currentDate.getDate()}日 $剪['周日', '周一', '周二', '周三', '周四', '周五', '周六'][currentDate.getDay()]}`;
-                return "好习惯打卡成就记录";
-            };
-
-            return (
-                <div className="space-y-4">
-                    {/* Fairy banner */}
-                    <div className="bg-gradient-to-r from-pink-100 via-rose-100 to-purple-100 border-4 border-pink-350 rounded-3xl p-4 shadow-[4px_4px_0px_0px_#ec4899] flex items-center gap-4 text-left relative overflow-hidden animate-royal-sparkle">
-                        <div className="absolute right-2 -bottom-2 text-6xl opacity-20 select-none pointer-events-none">🏰</div>
-                        <div className="text-4xl shrink-0 select-none filter drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]">🧚‍♀️</div>
-                        <div>
-                            <h4 className="text-xs font-bold font-serif text-pink-700 tracking-wider flex items-center gap-1.5">
-                                <span>✨ 智慧皇家仙女 · 聪聪 (Smart Royal Fairy)</span>
-                                <span className="text-amber-500 font-sans">👑</span>
-                            </h4>
-                            <p className="text-xs sm:text-sm font-bold text-rose-950 mt-1 leading-relaxed">
-                                {getSmartQuote()}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Main Bar */}
-                    <div className="flex flex-col xl:flex-row items-center justify-between gap-4">
-                        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                            <div className="flex items-center gap-2 shrink-0 mr-4">
-                                <span className="text-4xl animate-bounce">👑</span>
-                                <div>
-                                    <p className="text-2xl font-black font-serif text-pink-600 tracking-wide filter drop-shadow-[1px_1px_1px_rgba(253,244,180,0.8)]">👸 皇家时间魔法盒</p>
-                                    <p className="text-[10px] font-black tracking-widest text-amber-600 font-serif">✨ ROYAL PRINCESS CALENDAR ✨</p>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-1.5 p-1 bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl border-2 border-pink-300 shadow-[2px_2px_0px_0px_#db2777]">
-                                {[
-                                    { id: 'month', label: '月度魔法 📅' },
-                                    { id: 'week', label: '周计划 🗓️' },
-                                    { id: 'day', label: '公主一日 🕒' },
-                                    { id: 'dakaPanel', label: '习惯水晶球 ⭐' },
-                                    { id: 'curriculumView', label: '🏰 皇家课程表 📚' },
-                                ].map((v) => (
-                                    <button
-                                        key={v.id}
-                                        onClick={() => setViewMode(v.id)}
-                                        className={`px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer ${
-                                            viewMode === v.id
-                                                ? 'bg-gradient-to-r from-amber-300 to-yellow-300 text-pink-800 shadow-[2px_2px_0px_0px_#db2777] border border-pink-400'
-                                                : 'text-pink-700 hover:bg-pink-100/60'
-                                        }`}
-                                    >
-                                        {v.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Navigation controllers */}
-                        <div className="flex items-center justify-between xl:justify-end gap-3 w-full xl:w-auto">
-                            {viewMode !== 'dakaPanel' && (
-                                <div className="flex items-center gap-2">
-                                    <button onClick={handlePrevious} className="p-2 bg-pink-50 hover:bg-pink-100 border-2 border-pink-400 rounded-2xl cursor-pointer shadow-[2px_2px_0px_0px_#db2777]">
-                                        <Icon name="ChevronLeft" className="w-5 h-5 text-pink-700" />
-                                    </button>
-                                    <div className="py-2 px-4 bg-gradient-to-r from-pink-50 to-amber-50 border-2 border-pink-400 rounded-2xl text-center min-w-[150px] shadow-[2px_2px_0px_0px_#db2777]">
-                                        <span className="text-xs sm:text-sm font-bold font-serif text-pink-850">
-                                            {getHeaderTitleText()}
-                                        </span>
-                                    </div>
-                                    <button onClick={handleNext} className="p-2 bg-pink-50 hover:bg-pink-100 border-2 border-pink-400 rounded-2xl cursor-pointer shadow-[2px_2px_0px_0px_#db2777]">
-                                        <Icon name="ChevronRight" className="w-5 h-5 text-pink-700" />
-                                    </button>
-                                </div>
-                            )}
-
-                            <div className="flex items-center gap-2">
-                                {viewMode !== 'dakaPanel' && (
-                                    <button onClick={() => setCurrentDate(new Date())} className="px-3.5 py-2 bg-pink-100 hover:bg-pink-200 border-2 border-pink-300 rounded-2xl font-bold text-xs text-pink-800 shadow-[2px_2px_0px_0px_#db2777]">
-                                        ✨ 今天
-                                    </button>
-                                )}
-                                <button onClick={() => onAddEventClick()} className="px-4 py-2 bg-gradient-to-r from-amber-300 to-yellow-300 text-pink-900 border-2 border-pink-400 rounded-2xl font-bold text-xs cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_0px_#db2777]">
-                                    <Icon name="Plus" className="w-4 h-4 text-pink-900" />
-                                    <span>记一笔魔法 🪄</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // COMPONENT: MonthView
-        function MonthView({ currentDate, events, onEventClick, onAddEventClick, onEventMove, setDraggedItem, draggedItem, onDayClick }) {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const days = getMonthDays(year, month);
-            const weekDaysShort = ['周一 🦄', '周二 🐼', '周三 🐨', '周四 🦊', '周五 🦁', '周六 🐯', '周日 🐰'];
-
-            const handleDragStart = (e, event) => {
-                e.dataTransfer.setData('text/plain', event.id);
-                setDraggedItem({ id: event.id, originDate: event.date });
-            };
-
-            const handleDrop = (e, targetDateStr) => {
-                e.preventDefault();
-                const eventId = e.dataTransfer.getData('text/plain') || (draggedItem && draggedItem.id);
-                if (eventId) {
-                    onEventMove(eventId, targetDateStr);
-                }
-                setDraggedItem(null);
-            };
-
-            return (
-                <div className="w-full bg-[#fffcfb]/90 rounded-3xl border-4 border-pink-300 p-4 shadow-[6px_6px_0px_0px_#db2777]">
-                    <div className="grid grid-cols-7 gap-2 mb-2 text-center">
-                        {weekDaysShort.map((name, idx) => (
-                            <div key={idx} className={`py-2 rounded-2xl border-2 border-pink-250 font-bold text-xs ${idx >= 5 ? 'bg-amber-100 hover:bg-amber-200 text-amber-800' : 'bg-pink-50 hover:bg-pink-100 text-pink-800'}`}>
-                                {name}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-2">
-                        {days.map((day, idx) => {
-                            const dateStr = formatDate(day);
-                            const isCurrentMonth = day.getMonth() === month;
-                            const isToday = formatDate(new Date()) === dateStr;
-                            const dayEvents = events.filter(e => e.date === dateStr);
-                            const hasOverlap = hasDayConflicts(events, dateStr);
-
-                            return (
-                                <div
-                                    key={idx}
-                                    onDragOver={e => e.preventDefault()}
-                                    onDrop={e => handleDrop(e, dateStr)}
-                                    onClick={() => onDayClick(day)}
-                                    className={`min-h-[110px] p-1.5 rounded-2xl border-2 flex flex-col justify-between transition-all duration-200 cursor-pointer relative ${
-                                        isToday 
-                                            ? 'bg-yellow-100/95 border-pink-400 shadow-[inset_0_0_0_2px_#db2777]' 
-                                            : isCurrentMonth 
-                                            ? 'bg-white border-pink-100 hover:border-pink-300' 
-                                            : 'bg-stone-50 text-stone-400 border-pink-50 opacity-50'
-                                    } ${hasOverlap ? 'border-dashed border-rose-500 bg-rose-50/50' : ''}`}
-                                >
-                                    <div className="flex items-center justify-between mb-1">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isToday ? 'bg-pink-500 text-white' : 'text-pink-905'}`}>
-                                            {day.getDate()}{isToday && ' ☀️'}
-                                        </span>
-                                        {hasOverlap && (
-                                            <span className="text-[8px] bg-rose-100 border border-rose-300 text-rose-650 px-1 py-0.2 rounded-full font-bold animate-pulse" title="时间有重叠占用">
-                                                🚨 Conflict
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div className="flex-grow space-y-1 overflow-y-auto max-h-[70px] scrollbar-thin">
-                                        {dayEvents.map(event => {
-                                            const colors = EVENT_COLORS[event.type];
-                                            return (
-                                                <div
-                                                    key={event.id}
-                                                    draggable
-                                                    onDragStart={e => handleDragStart(e, event)}
-                                                    onClick={e => { e.stopPropagation(); onEventClick(event); }}
-                                                    className={`p-1 text-[9px] font-bold rounded-lg border-2 border-pink-200 cursor-grab active:cursor-grabbing flex items-center justify-between shadow-[1px_1px_0px_0px_#db2777] truncate leading-tight ${colors.bg} ${colors.hoverBg}`}
-                                                    style={{ color: event.textColor || colors.fillColor }}
-                                                >
-                                                    <span className="truncate">{colors.emoji} {event.title}</span>
-                                                    <span className="text-[8px] font-mono scale-95 opacity-80">{event.startTime}</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-
-                                    <button
-                                        onClick={e => { e.stopPropagation(); onAddEventClick(dateStr); }}
-                                        className="w-full text-center py-0.5 mt-1 border border-dashed border-pink-250 hover:border-pink-500 hover:bg-pink-50 bg-transparent rounded-lg text-[9px] font-bold text-pink-400 hover:text-pink-700"
-                                    >
-                                        ➕ 记一笔
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            );
-        }
-
-        // COMPONENT: WeekView
-        function WeekView({ currentDate, events, onEventClick, onAddEventClick, onEventMove, setDraggedItem, draggedItem, onDayClick }) {
-            const weekDays = getWeekDays(currentDate);
-            const SLOT_HEIGHT = 38;
-            const SLOT_GAP = 5;
-
-            const handleDrop = (e, dateStr, timeStr) => {
-                e.preventDefault();
-                const eventId = e.dataTransfer.getData('text/plain') || (draggedItem && draggedItem.id);
-                if (eventId) {
-                    onEventMove(eventId, dateStr, timeStr);
-                }
-                setDraggedItem(null);
-            };
-
-            return (
-                <div className="w-full bg-[#fffcfb]/90 rounded-3xl border-4 border-pink-300 p-2 sm:p-4 shadow-[6px_6px_0px_0px_#db2777]">
-                    <div className="grid grid-cols-8 gap-1 text-center items-center">
-                        <div className="bg-pink-50 rounded-xl py-2 text-[10px] font-bold text-pink-700 border-2 border-pink-200">魔法时刻</div>
-                        {weekDays.map((dayDate, idx) => {
-                            const dateStr = formatDate(dayDate);
-                            const isToday = formatDate(new Date()) === dateStr;
-                            return (
-                                <div
-                                    key={idx}
-                                    onClick={() => onDayClick(dayDate)}
-                                    className={`py-1.5 rounded-2xl border-2 flex flex-col justify-center items-center shadow-[2px_2px_0px_0px_#db2777] cursor-pointer hover:bg-pink-100/40 transition-all ${
-                                        isToday 
-                                            ? 'bg-gradient-to-r from-amber-300 to-yellow-300 border-pink-400 text-pink-900' 
-                                            : 'bg-white border-pink-200 hover:border-pink-300'
-                                    }`}
-                                >
-                                    <span className="text-[10px] font-bold font-serif text-pink-850 shrink-0">
-                                        {['周一 🦄', '周二 🐼', '周三 🐨', '周四 🦊', '周五 🦁', '周六 🐯', '周日 🐰'][idx]}
-                                    </span>
-                                    <span className="text-[8px] text-pink-400 font-mono font-bold">{dayDate.getMonth() + 1}-{dayDate.getDate()}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    <div className="mt-2 grid grid-cols-8 gap-1 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin items-start">
-                        {/* Time labels column */}
-                        <div className="flex flex-col gap-1.5">
-                            {TIME_SLOTS.map(time => {
-                                const isHour = time.endsWith(':00');
-                                return (
-                                    <div key={time} className="flex flex-col justify-center items-center bg-white border border-pink-100 rounded-xl relative shrink-0" style={{ height: `${SLOT_HEIGHT}px` }}>
-                                        <span className={`text-[9.5px] font-mono font-bold ${isHour ? 'text-pink-700 font-black' : 'text-pink-400'}`}>
-                                            {time}
-                                        </span>
-                                        {isHour && <span className="absolute right-1 top-1 w-1 h-1 bg-pink-500 rounded-full animate-ping" />}
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Each day column */}
-                        {weekDays.map(dayDate => {
-                            const dateStr = formatDate(dayDate);
-                            const dayEvents = events.filter(e => e.date === dateStr);
-                            const renderedSlots = [];
-                            const skippedTimes = new Set();
-
-                            TIME_SLOTS.forEach(time => {
-                                if (skippedTimes.has(time)) return;
-                                const startingEvents = dayEvents.filter(e => e.startTime === time);
-
-                                if (startingEvents.length > 0) {
-                                    const maxDuration = Math.max(...startingEvents.map(e => e.estimatedDuration || 30));
-                                    const slotsCount = Math.max(1, Math.ceil(maxDuration / 30));
-                                    const startIndex = TIME_SLOTS.indexOf(time);
-                                    for (let i = 1; i < slotsCount; i++) {
-                                        if (startIndex + i < TIME_SLOTS.length) {
-                                            skippedTimes.add(TIME_SLOTS[startIndex + i]);
-                                        }
-                                    }
-                                    const calculatedHeight = slotsCount * SLOT_HEIGHT + (slotsCount - 1) * SLOT_GAP;
-
-                                    renderedSlots.push(
-                                        <div
-                                            key={`${dateStr}-${time}`}
-                                            onDragOver={e => e.preventDefault()}
-                                            onDrop={e => handleDrop(e, dateStr, time)}
-                                            onClick={() => onDayClick(dayDate)}
-                                            className="p-1 border border-pink-150 bg-white rounded-xl flex flex-col justify-center relative shrink-0 overflow-y-auto scrollbar-none"
-                                            style={{ height: `${calculatedHeight}px` }}
-                                        >
-                                            {startingEvents.map(event => {
-                                                const colors = EVENT_COLORS[event.type];
-                                                return (
-                                                    <div
-                                                        key={event.id}
-                                                        draggable
-                                                        onDragStart={e => {
-                                                            e.dataTransfer.setData('text/plain', event.id);
-                                                            setDraggedItem({ id: event.id, originDate: dateStr, originTime: time });
-                                                        }}
-                                                        onClick={e => { e.stopPropagation(); onEventClick(event); }}
-                                                        className={`p-1.5 w-full rounded-lg border-2 border-pink-300 cursor-grab active:cursor-grabbing text-left shadow-[1px_1px_0px_0px_#db2777] leading-tight flex-grow flex flex-col justify-between ${colors.bg}`}
-                                                        style={{ color: event.textColor || colors.fillColor }}
-                                                    >
-                                                        <div>
-                                                            <div className="flex items-center gap-0.5 font-bold text-[9px] truncate">
-                                                                <span>{colors.emoji}</span>
-                                                                <span className="truncate">{event.title}</span>
-                                                            </div>
-                                                            {event.notes && <p className="text-[7px] truncate font-medium mt-0.5 opacity-80">{event.notes}</p>}
-                                                        </div>
-                                                        <div className="flex items-center justify-between text-[7px] font-bold opacity-60 font-mono mt-0.5">
-                                                            <span>⏱️ {event.estimatedDuration}分</span>
-                                                            {event.completed && <span>👑</span>}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    );
-                                } else {
-                                    const isOccupiedByAny = isSlotOccupied(dateStr, time, events);
-                                    renderedSlots.push(
-                                        <div
-                                            key={`${dateStr}-${time}`}
-                                            onDragOver={e => e.preventDefault()}
-                                            onDrop={e => handleDrop(e, dateStr, time)}
-                                            onClick={() => onAddEventClick(dateStr, time)}
-                                            className={`border rounded-xl flex flex-col justify-center relative transition-colors duration-150 group cursor-pointer shrink-0 h-[38px] ${
-                                                isOccupiedByAny ? 'bg-rose-50 border-rose-100 hover:bg-rose-100' : 'bg-white hover:bg-pink-50/20 border-pink-50'
-                                            }`}
-                                        >
-                                            {isOccupiedByAny ? (
-                                                <span className="text-[8px] text-rose-500 text-center select-none font-extrabold animate-pulse">💖</span>
-                                            ) : (
-                                                <span className="hidden group-hover:block text-pink-300 text-[9px] text-center font-bold">👑</span>
-                                            )}
-                                        </div>
-                                    );
-                                }
-                            });
-
-                            return (
-                                <div key={dateStr} className="flex flex-col gap-1.5 shrink-0" style={{ width: '100%' }}>
-                                    {renderedSlots}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            );
-        }
-
-        // COMPONENT: DayView
-        function DayView({ currentDate, events, onEventClick, onAddEventClick, onEventMove, onUpdateEvent, setDraggedItem, draggedItem }) {
-            const dateStr = formatDate(currentDate);
-            const dayEvents = events.filter(e => e.date === dateStr);
-            const sortedEvents = dayEvents.sort((a, b) => a.startTime.localeCompare(b.startTime));
-
-            const totalEstimatedMins = sortedEvents.reduce((acc, curr) => acc + curr.estimatedDuration, 0);
-            const completedCount = sortedEvents.filter(e => e.completed).length;
-
-            const handleDrop = (e, targetTimeStr) => {
-                e.preventDefault();
-                const eventId = e.dataTransfer.getData('text/plain') || (draggedItem && draggedItem.id);
-                if (eventId) {
-                    onEventMove(eventId, dateStr, targetTimeStr);
-                }
-                setDraggedItem(null);
-            };
-
-            const toggleEventDirect = (event) => {
-                onUpdateEvent({ ...event, completed: !event.completed });
-            };
-
-            const toggleSubitem = (event, subitemId) => {
-                if (!event.dakaSubitems) return;
-                const updatedSub = event.dakaSubitems.map(s => s.id === subitemId ? { ...s, completed: !s.completed } : s);
-                const completes = event.dakaMode === 'any' ? updatedSub.some(s => s.completed) : updatedSub.every(s => s.completed);
-                onUpdateEvent({ ...event, dakaSubitems: updatedSub, completed: completes });
-            };
-
-            return (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* LEFT Timeline */}
-                    <div className="lg:col-span-5 bg-gradient-to-br from-pink-50/70 to-white border-4 border-pink-300 p-4 rounded-3xl shadow-[5px_5px_0px_0px_#db2777]">
-                        <div className="flex items-center justify-between mb-4 border-b-2 border-pink-200 pb-2">
-                            <h4 className="text-sm font-bold font-serif text-pink-700 flex items-center gap-1.5">
-                                <Icon name="Clock" className="w-5 h-5 text-pink-500" />
-                                ⏱️ 公主魔法时刻
-                            </h4>
-                            <span className="text-[10px] font-bold text-pink-400 font-mono">06:00 - 22:00</span>
-                        </div>
-
-                        <div className="space-y-1.5 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
-                            {(() => {
-                                const renderedSlots = [];
-                                const skippedTimes = new Set();
-                                const SLOT_HEIGHT = 38;
-                                const SLOT_GAP = 5;
-
-                                TIME_SLOTS.forEach(time => {
-                                    if (skippedTimes.has(time)) return;
-                                    const startingEvents = sortedEvents.filter(e => e.startTime === time);
-
-                                    if (startingEvents.length > 0) {
-                                        const maxDuration = Math.max(...startingEvents.map(e => e.estimatedDuration || 30));
-                                        const slotsCount = Math.max(1, Math.ceil(maxDuration / 30));
-                                        const startIndex = TIME_SLOTS.indexOf(time);
-                                        for (let i = 1; i < slotsCount; i++) {
-                                            if (startIndex + i < TIME_SLOTS.length) {
-                                                skippedTimes.add(TIME_SLOTS[startIndex + i]);
-                                            }
-                                        }
-
-                                        const calculatedHeight = slotsCount * SLOT_HEIGHT + (slotsCount - 1) * SLOT_GAP;
-
-                                        renderedSlots.push(
-                                            <div key={time} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, time)} className="flex gap-2.5 px-1.5 py-0.5 border-b border-dashed border-pink-100 items-start hover:bg-pink-50/30 relative select-none shrink-0" style={{ minHeight: `${calculatedHeight}px` }}>
-                                                <div className="w-10 text-center text-[10px] font-bold pt-1 font-mono text-pink-700">{time}</div>
-                                                <div className="flex-grow flex flex-col gap-1 w-full justify-center">
-                                                    {startingEvents.map(event => (
-                                                        <div
-                                                            key={event.id}
-                                                            draggable
-                                                            onDragStart={e => {
-                                                                e.dataTransfer.setData('text/plain', event.id);
-                                                                setDraggedItem({ id: event.id, originDate: dateStr, originTime: time });
-                                                            }}
-                                                            onClick={e => { e.stopPropagation(); onEventClick(event); }}
-                                                            className={`w-full p-2 rounded-xl border-2 border-pink-300 flex items-center justify-between shadow-[2px_2px_0px_0px_#db2777] cursor-grab ${EVENT_COLORS[event.type].bg}`}
-                                                            style={{ color: event.textColor || EVENT_COLORS[event.type].fillColor, minHeight: `${calculatedHeight - 6}px` }}
-                                                        >
-                                                            <div className="flex items-center gap-1 truncate text-left">
-                                                                <span className="text-sm shrink-0">{EVENT_COLORS[event.type].emoji}</span>
-                                                                <div className="truncate">
-                                                                    <p className="font-bold text-[10px] truncate leading-tight">{event.title}</p>
-                                                                    <p className="text-[8px] opacity-80 leading-none mt-0.5">{event.startTime} ({event.estimatedDuration}分)</p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-center gap-1 shrink-0 ml-1">
-                                                                {event.completed && <span className="text-[10px]">👑</span>}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        );
-                                    } else {
-                                        const isOccupiedByAny = isSlotOccupied(dateStr, time, events);
-                                        const isHour = time.endsWith(':00');
-                                        renderedSlots.push(
-                                            <div key={time} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, time)} onClick={() => onAddEventClick(dateStr, time)} className="flex gap-3 px-1.5 py-0.5 border-b border-dashed items-center transition-colors shrink-2 h-[38px] relative cursor-pointer hover:bg-pink-50/20 border-pink-55">
-                                                <div className="w-10 text-center text-[10px] shrink-0 font-mono font-bold">
-                                                    <span className={isHour ? 'text-pink-600 text-[11px] font-extrabold' : 'text-pink-400'}>{time}</span>
-                                                </div>
-                                                <div className="flex-grow pointer-events-none text-left">
-                                                    {isOccupiedByAny ? (
-                                                        <div className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded border border-rose-300 text-[8px] font-bold flex items-center gap-0.5 animate-pulse">
-                                                            <Icon name="AlertCircle" className="w-3 h-3" />时间被重叠占用
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-pink-300 text-[9px] opacity-40">✨ 挑选时刻...</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-                                });
-                                return renderedSlots;
-                            })()}
-                        </div>
-                    </div>
-
-                    {/* RIGHT details */}
-                    <div className="lg:col-span-7 space-y-4">
-                        <div className="bg-gradient-to-r from-pink-100 to-amber-100 border-4 border-pink-300 rounded-3xl p-4 shadow-[4px_4px_0px_0px_#db2777] flex items-center justify-between">
-                            <div>
-                                <h5 className="font-bold font-serif text-pink-805 text-sm flex items-center gap-1"><Icon name="Sparkles" /> 今日皇室小事记</h5>
-                                <p className="text-xs text-pink-700 font-bold">目前安排了 <span className="font-black text-rose-600">{sortedEvents.length}</span> 个计划，预计用时 <span className="font-black text-indigo-650">{totalEstimatedMins}</span> 分钟</p>
-                            </div>
-                            <div className="bg-white/95 border-2 border-pink-450 px-3 py-1 rounded-2xl text-center shadow-[2px_2px_0px_0px_#db2777]">
-                                <p className="text-[9px] font-bold text-pink-500">已打卡完成</p>
-                                <p className="text-md font-bold text-pink-700 font-serif">{completedCount} <span className="text-xs text-pink-400">/ {sortedEvents.length}</span></p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            {sortedEvents.map(event => {
-                                const colors = EVENT_COLORS[event.type];
-                                return (
-                                    <div key={event.id} className="bg-white border-4 border-pink-200 rounded-2xl p-4 shadow-[4px_4px_0px_0px_#db2777] relative overflow-hidden transition hover:border-pink-300">
-                                        <div className="absolute right-3 top-3 opacity-20 text-4xl pointer-events-none select-none">{colors.emoji}</div>
-                                        <div className="flex items-start justify-between gap-4 mb-2">
-                                            <div>
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className={`px-2 py-0.5 rounded-full border border-pink-200 font-bold text-[9px] ${colors.bg}`} style={{ color: event.textColor || colors.fillColor }}>
-                                                        {colors.label}
-                                                    </span>
-                                                    <span className="text-[10px] text-pink-500 font-bold flex items-center gap-1">
-                                                        <Icon name="Clock" /> {event.startTime}开始
-                                                    </span>
-                                                </div>
-                                                <h4 className="text-md font-bold font-serif hover:underline mt-1" style={{ color: event.textColor || colors.fillColor }} onClick={() => onEventClick(event)}>
-                                                    {event.title}
-                                                </h4>
-                                            </div>
-
-                                            {event.type !== 'daka' ? (
-                                                <button onClick={() => toggleEventDirect(event)} className="p-1 rounded-full text-pink-700 cursor-pointer">
-                                                    {event.completed ? <Icon name="CheckCircle2" className="w-8 h-8 text-emerald-500" /> : <Icon name="Circle" className="w-8 h-8 text-pink-100" />}
-                                                </button>
-                                            ) : (
-                                                <div className="text-right">
-                                                    {event.completed ? <span className="bg-emerald-100 border border-emerald-400 text-emerald-800 text-[9px] px-2.5 py-1 rounded-full font-bold">⭐ 已打卡</span> : <span className="bg-purple-100 border border-purple-300 text-purple-800 text-[9px] px-2.5 py-1 rounded-full font-bold">⏳ 努力中</span>}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-2 text-2xs font-bold text-pink-750 border-t border-dashed border-pink-100 pt-2 mb-2 items-center">
-                                            <span>⏱️ 魔法时间: {event.estimatedDuration} 分钟</span>
-                                            {event.type === 'curriculum' && (
-                                                <>
-                                                    {event.teacher && <span>👤 讲师: {event.teacher}</span>}
-                                                    {event.location && <span className="bg-pink-50 px-2.5 py-0.5 border rounded-md">📍 地点: {event.location}</span>}
-                                                </>
-                                            )}
-                                        </div>
-
-                                        {event.type === 'daka' && event.dakaSubitems && event.dakaSubitems.length > 0 && (
-                                            <div className="mt-2 bg-purple-50 p-2.5 rounded-xl border border-purple-150 space-y-1.5">
-                                                <div className="flex items-center justify-between text-[10px] text-purple-900 font-bold">
-                                                    <span>子习惯打卡 ({event.dakaMode === 'any' ? '任意一个完成即可' : '全部通关项目'}):</span>
-                                                    <span>{event.dakaSubitems.filter(s => s.completed).length}/{event.dakaSubitems.length}</span>
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                                                    {event.dakaSubitems.map(sub => (
-                                                        <button key={sub.id} onClick={() => toggleSubitem(event, sub.id)} className={`flex items-center gap-2 p-1.5 rounded-md border text-[11px] font-bold ${sub.completed ? 'bg-purple-100 border-purple-300 text-purple-800' : 'bg-white border-pink-100 text-pink-800'}`}>
-                                                            <span className="w-3.5 h-3.5 rounded border border-purple-200 bg-white flex items-center justify-center font-bold text-[9px]">
-                                                                {sub.completed && '✓'}
-                                                            </span>
-                                                            <span className={sub.completed ? 'line-through opacity-70' : ''}>{sub.name}</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {event.notes && <p className="text-[11px] bg-pink-50/50 p-2 rounded-xl text-pink-850 italic mt-1 font-medium">🎀 贴心备忘: {event.notes}</p>}
-                                    </div>
-                                );
-                            })}
-
-                            {sortedEvents.length === 0 && (
-                                <div className="p-8 text-center bg-pink-50/30 border-2 border-dashed border-pink-300 rounded-3xl flex flex-col items-center justify-center space-y-2">
-                                    <span className="text-4xl">🏰</span>
-                                    <p className="text-pink-600 font-bold">今天竟然还没有魔法备忘事项哦！</p>
-                                    <button onClick={() => onAddEventClick(dateStr)} className="px-3 py-1.5 bg-gradient-to-r from-pink-300 to-amber-200 text-pink-900 border-2 border-pink-400 rounded-xl font-bold text-2xs shadow-[2px_2px_0px_0px_#db2777]">
-                                        🪄 唤醒水晶球记一笔！
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // COMPONENT: DakaPanel
-        function DakaPanel({ events, onUpdateEvent, onAddDakaClick, onEventClick }) {
-            const dakaEvents = events.filter(e => e.type === 'daka');
-            const todayStr = formatDate(new Date());
-            const [filterMode, setFilterMode] = useState('today');
-
-            const filteredDaka = dakaEvents.filter(e => filterMode === 'today' ? e.date === todayStr : true);
-            const totalStars = dakaEvents.filter(e => e.completed).length;
-            const subDoneCount = dakaEvents.reduce((acc, curr) => acc + (curr.dakaSubitems?.filter(s => s.completed).length || 0), 0);
-
-            const toggleMasterDaka = (event) => {
-                const compiles = !event.completed;
-                const subs = event.dakaSubitems?.map(s => ({ ...s, completed: compiles })) || [];
-                onUpdateEvent({ ...event, dakaSubitems: subs, completed: compiles });
-            };
-
-            const toggleSubitem = (event, subitemId) => {
-                if (!event.dakaSubitems) return;
-                const updatedSub = event.dakaSubitems.map(s => s.id === subitemId ? { ...s, completed: !s.completed } : s);
-                const completes = event.dakaMode === 'any' ? updatedSub.some(s => s.completed) : updatedSub.every(s => s.completed);
-                onUpdateEvent({ ...event, dakaSubitems: updatedSub, completed: completes });
-            };
-
-            return (
-                <div className="space-y-6">
-                    {/* ACHIEVEMENTS BLOCK */}
-                    <div className="bg-[#fffdf8] border-4 border-pink-300 rounded-3xl p-5 shadow-[5px_5px_0px_0px_#db2777] relative overflow-hidden">
-                        <div className="absolute -right-4 -bottom-4 opacity-10 text-[90px] pointer-events-none">⭐</div>
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                            <div className="space-y-2 text-center md:text-left">
-                                <span className="inline-flex items-center gap-1 px-3 py-0.5 bg-purple-100 border border-purple-300 text-purple-700 rounded-full text-[10px] font-bold">
-                                    <Icon name="Trophy" className="w-3.5 h-3.5" /> 我的好习惯魔杖
-                                </span>
-                                <h3 className="text-xl font-bold text-slate-800">🌟 好习惯自律水晶墙</h3>
-                                <p className="text-xs text-slate-500 font-bold">努力打卡，收集闪亮的小星星，可以前往城堡兑换成就奖励哦！✨</p>
-                            </div>
-
-                            <div className="flex items-center gap-3 shrink-0">
-                                <div className="bg-amber-100 border-2 border-pink-300 p-2 rounded-xl text-center min-w-[70px]">
-                                    <Icon name="Star" className="w-6 h-6 text-yellow-500 fill-yellow-400 mx-auto animate-bounce" />
-                                    <p className="text-[9px] font-bold mt-1 text-slate-500">已获星星数： {totalStars}颗</p>
-                                </div>
-                                <div className="bg-purple-100 border-2 border-pink-300 p-2 rounded-xl text-center min-w-[70px]">
-                                    <p className="text-xl">📝</p>
-                                    <p className="text-[9px] font-bold mt-1 text-slate-500">子任务搞定： {subDoneCount}次</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center p-1 bg-white border border-pink-300 rounded-xl shadow-sm">
-                            <button onClick={() => setFilterMode('today')} className={`px-4 py-1 rounded-lg text-xs font-bold transition ${filterMode === 'today' ? 'bg-purple-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>🗓️ 今日打卡</button>
-                            <button onClick={() => setFilterMode('all')} className={`px-4 py-1 rounded-lg text-xs font-bold transition ${filterMode === 'all' ? 'bg-purple-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>🎒 所有习惯</button>
-                        </div>
-                        <button onClick={() => onAddDakaClick(todayStr)} className="px-4 py-2 bg-gradient-to-r from-purple-300 to-pink-300 text-purple-900 border-2 border-pink-350 rounded-2xl font-bold text-xs shadow-[2px_2px_0px_0px_#db2777]">
-                            ➕ 增加一个打卡好习惯 ⭐
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filteredDaka.map(habit => {
-                            const doneSubs = habit.dakaSubitems?.filter(s => s.completed).length || 0;
-                            const totalSubs = habit.dakaSubitems?.length || 0;
-                            return (
-                                <div key={habit.id} className="bg-white border-4 border-pink-200 rounded-3xl p-5 shadow-[4px_4px_0px_0px_#db2777] relative overflow-hidden flex flex-col justify-between">
-                                    {habit.completed && <div className="absolute right-4 top-4"><Icon name="Star" className="w-10 h-10 text-yellow-500 fill-yellow-400 rotate-12" /></div>}
-                                    <div>
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <p className="text-[9px] text-pink-400 font-mono font-bold mb-1">📅 {habit.date} ({habit.startTime})</p>
-                                                <h4 className="text-md font-bold font-serif cursor-pointer hover:underline" style={{ color: habit.textColor || EVENT_COLORS.daka.fillColor }} onClick={() => onEventClick(habit)}>{habit.title}</h4>
-                                            </div>
-                                            <button onClick={() => toggleMasterDaka(habit)} className="p-1 rounded-full text-purple-400">
-                                                {habit.completed ? <Icon name="CheckCircle2" className="w-8 h-8 text-yellow-500" /> : <Icon name="Circle" className="w-8 h-8 text-pink-100" />}
-                                            </button>
-                                        </div>
-
-                                        <p className="text-[10px] text-slate-500 font-bold mt-2">⏱️ 习惯估计用时: <span className="bg-emerald-50 text-emerald-800 border px-1.5 py-0.2 rounded font-mono">{habit.estimatedDuration} 分钟</span></p>
-
-                                        {habit.dakaSubitems && habit.dakaSubitems.length > 0 && (
-                                            <div className="mt-4 p-3 bg-purple-50 rounded-2xl border border-purple-100 space-y-1.5">
-                                                <div className="flex items-center justify-between text-[10px] font-bold text-slate-650">
-                                                    <span>子习惯指标 ({habit.dakaMode === 'any' ? '完成任意一项' : '全选大通关'}):</span>
-                                                    <span>{doneSubs}/{totalSubs}个</span>
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    {habit.dakaSubitems.map(sub => (
-                                                        <button key={sub.id} onClick={() => toggleSubitem(habit, sub.id)} className={`w-full flex items-center justify-between p-1.5 rounded-xl border text-xs font-bold transition ${sub.completed ? 'bg-purple-100 border-purple-300 text-purple-800' : 'bg-white border-pink-50 hover:border-purple-200 text-slate-600'}`}>
-                                                            <span className={sub.completed ? 'line-through opacity-70' : ''}>{sub.name}</span>
-                                                            <span className="w-4 h-4 rounded border flex items-center justify-center text-[10px] font-bold bg-white">{sub.completed && '✓'}</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {habit.notes && <p className="text-[11px] bg-stone-50 border p-2 rounded-xl text-stone-500 mt-3 italic font-medium">备忘: {habit.notes}</p>}
-                                </div>
-                            );
-                        })}
-
-                        {filteredDaka.length === 0 && (
-                            <div className="col-span-1 md:col-span-2 p-12 text-center bg-stone-50 border-4 border-dashed border-pink-250 rounded-3xl flex flex-col items-center justify-center space-y-2">
-                                <span className="text-4xl text-pink-300">🐨</span>
-                                <p className="text-slate-500 font-extrabold text-sm">今天还没有安排好习惯打卡事项哦！</p>
-                                <button onClick={() => onAddDakaClick(todayStr)} className="px-4 py-1.5 bg-purple-100 border border-purple-300 text-purple-800 rounded-xl text-xs font-bold">➕ 快来设立一个吧！</button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        }
-
-        // COMPONENT: CurriculumView
-        function CurriculumView({ currentDate, events, onSaveEvent, onDeleteEvent, onUpdateEvent }) {
-            const weekDays = getWeekDays(currentDate);
-            const weekDaysStr = weekDays.map(d => formatDate(d));
-
-            const [courseTitle, setCourseTitle] = useState('');
-            const [selectedDayIdx, setSelectedDayIdx] = useState(0);
-            const [startTime, setStartTime] = useState('08:30');
-            const [duration, setDuration] = useState(45);
-            const [teacher, setTeacher] = useState('');
-            const [location, setLocation] = useState('');
-            const [notes, setNotes] = useState('');
-
-            const handleAddCourse = (e) => {
-                e.preventDefault();
-                if (!courseTitle.trim()) return;
-                const targetDate = weekDaysStr[selectedDayIdx];
-                onSaveEvent({
-                    title: courseTitle.trim(),
-                    type: 'curriculum',
-                    date: targetDate,
-                    startTime: startTime,
-                    estimatedDuration: Number(duration),
-                    color: 'bg-emerald-50',
-                    textColor: '#059669',
-                    teacher: teacher.trim() || undefined,
-                    location: location.trim() || undefined,
-                    notes: notes.trim() || undefined,
-                    completed: false
-                });
-
-                setCourseTitle('');
-                setTeacher('');
-                setLocation('');
-                setNotes('');
-            };
-
-            const currWeekEvents = events.filter(e => e.type === 'curriculum' && weekDaysStr.includes(e.date));
-
-            return (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* LEFT creator */}
-                    <div className="lg:col-span-4 bg-gradient-to-br from-pink-50 via-purple-50 to-pink-100 rounded-3xl border-4 border-pink-200 p-4 shadow-[5px_5px_0px_0px_#db2777]">
-                        <h4 className="text-sm font-extrabold text-pink-700 tracking-wider flex items-center gap-1 mb-2 border-b-2 border-pink-150 pb-1.5">👸 课程魔法编辑器</h4>
-                        <div className="mb-3.5">
-                            <label className="text-[10px] font-bold text-pink-500 mb-1 block">✨ 精选皇家推荐课：</label>
-                            <div className="flex flex-wrap gap-1.5">
-                                {PRINCESS_COURSES.map(c => (
-                                    <button key={c} type="button" onClick={() => setCourseTitle(c)} className="px-2.5 py-0.5 bg-white text-pink-800 rounded-full border border-pink-250 hover:bg-pink-100 text-[10px] font-bold">{c}</button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleAddCourse} className="space-y-3">
-                            <div>
-                                <label className="text-[10px] font-bold text-pink-700 block mb-0.5">🔍 课程/魔法名称</label>
-                                <input type="text" value={courseTitle} onChange={e => setCourseTitle(e.target.value)} placeholder="如: 皇家文学 📖" className="w-full px-3 py-1.5 rounded-xl border border-pink-300 bg-white text-xs font-bold" required />
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="text-[10px] font-bold text-pink-700 block mb-0.5">📅 魔法星期</label>
-                                    <select value={selectedDayIdx} onChange={e => setSelectedDayIdx(Number(e.target.value))} className="w-full px-2 py-1.5 rounded-xl border border-pink-300 bg-white text-xs font-bold">
-                                        {['周一 🦄', '周二 🐼', '周三 🐨', '周四 🦊', '周五 🦁', '周六 🐯', '周日 🐰'].map((d, i) => (
-                                            <option key={i} value={i}>{d}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-pink-700 block mb-0.5">🕒 上课时间</label>
-                                    <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full px-2 py-1.5 rounded-xl border border-pink-300 bg-white text-xs font-bold" required />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="text-[10px] font-bold text-pink-700 block mb-0.5">⏳ 课程时长 (分)</label>
-                                    <input type="number" value={duration} onChange={e => setDuration(Number(e.target.value))} className="w-full px-3 py-1.5 rounded-xl border border-pink-300 bg-white text-xs font-bold" required />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-pink-700 block mb-0.5">🏰 上课地点</label>
-                                    <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="如: 皇家图书馆" className="w-full px-3 py-1.5 rounded-xl border border-pink-300 bg-white text-xs" />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-bold text-pink-700 block mb-0.5">👤 讲家/老师</label>
-                                <input type="text" value={teacher} onChange={e => setTeacher(e.target.value)} placeholder="如: 智慧辛德瑞拉" className="w-full px-3 py-1.5 rounded-xl border border-pink-300 bg-white text-xs font-bold" />
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-bold text-pink-700 block mb-0.5">📝 课堂备注</label>
-                                <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="记得带好皇家默写本哦！" className="w-full px-3 py-1.5 rounded-xl border border-pink-300 bg-white text-xs h-12 resize-none" />
-                            </div>
-                            <button type="submit" className="w-full py-2 bg-gradient-to-r from-pink-400 to-rose-450 hover:from-pink-500 hover:to-rose-500 text-white font-bold rounded-2xl border-2 border-pink-500 shadow-[2px_2px_0px_0px_#db2777]">
-                                🦄 添加到魔法课程表
-                            </button>
-                        </form>
-                    </div>
-
-                    {/* RIGHT schedule timetable columns */}
-                    <div className="lg:col-span-8 bg-[#fffcf5] border-4 border-yellow-350 rounded-3xl p-5 shadow-[5px_5px_0px_0px_#ca8a04]">
-                        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b-2 border-yellow-100 pb-2">
-                            <div>
-                                <h3 className="text-md font-bold font-serif text-amber-700">🏰 皇家魔法大课程表 (Timetable)</h3>
-                                <p className="text-[10px] text-amber-400 font-bold block">本周课程跨度：{weekDays[0].getMonth() + 1}月{weekDays[0].getDate()}日 ~ {weekDays[6].getMonth() + 1}月{weekDays[6].getDate()}日</p>
-                            </div>
-                            <span className="bg-pink-100 px-3 py-0.5 rounded-full border border-pink-300 text-pink-700 font-bold text-[10px]">✨ 本周安排了 {currWeekEvents.length} 节必修课</span>
-                        </div>
-
-                        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
-                            {weekDays.map((day, i) => {
-                                const dStr = formatDate(day);
-                                const isToday = formatDate(new Date()) === dStr;
-                                const dayLessons = currWeekEvents.filter(e => e.date === dStr).sort((a,b) => a.startTime.localeCompare(b.startTime));
-
-                                return (
-                                    <div key={dStr} className={`p-3 rounded-2xl border-2 transition ${isToday ? 'bg-gradient-to-r from-pink-50 to-amber-50 border-yellow-400 shadow-[2px_2px_0px_0px_#ca8a04]' : 'bg-white border-pink-50'}`}>
-                                        <div className="flex items-center justify-between mb-1.5">
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-xs font-bold font-serif text-pink-700">{['周一 🦄', '周二 🐼', '周三 🐨', '周外 🦊', '周五 🦁', '周六 🐯', '周日 🐰'][i]}</span>
-                                                <span className="text-[9px] font-bold text-pink-300 font-mono">({day.getMonth() + 1}月{day.getDate()}日)</span>
-                                                {isToday && <span className="bg-pink-500 text-white rounded-full px-2 py-0.2 text-[8px] font-bold animate-pulse">今日</span>}
-                                            </div>
-                                            <span className="text-[9px] text-amber-600 font-bold">{dayLessons.length} 节课</span>
-                                        </div>
-
-                                        {dayLessons.length === 0 ? (
-                                            <p className="text-[10px] text-pink-300/80 text-center py-2 italic font-bold">✨ 今天没有魔法必修课哦，做个尊贵闲适的公主吧 ✨</p>
-                                        ) : (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                {dayLessons.map(lesson => (
-                                                    <div key={lesson.id} className="bg-gradient-to-r from-pink-50/50 to-purple-50/50 border border-pink-100 rounded-xl p-3 flex flex-col justify-between relative group hover:border-pink-300 transition">
-                                                        <div className="flex items-start justify-between">
-                                                            <button onClick={() => onUpdateEvent({...lesson, completed: !lesson.completed})} className="text-xs font-bold text-pink-850 text-left">
-                                                                {lesson.completed ? '💖' : '🤍'} {lesson.title}
-                                                            </button>
-                                                            <button onClick={() => onDeleteEvent(lesson.id)} className="p-1 text-pink-300 hover:text-red-500 font-bold text-xs opacity-0 group-hover:opacity-100 transition">
-                                                                <Icon name="Trash2" className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-
-                                                        <div className="grid grid-cols-2 gap-x-1.5 gap-y-0.5 text-[9px] text-pink-650 font-bold mt-2.5 pt-1.5 border-t border-dashed border-pink-100">
-                                                            <span>⏰ {lesson.startTime} ({lesson.estimatedDuration}分)</span>
-                                                            {lesson.location && <span className="truncate">📍 {lesson.location}</span>}
-                                                            {lesson.teacher && <span className="truncate">👤 {lesson.teacher}</span>}
-                                                        </div>
-
-                                                        {lesson.completed && <div className="absolute right-1 bottom-1 bg-yellow-200 text-[8px] p-0.5 rounded-full">⭐</div>}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // COMPONENT: RewardSection
-        function RewardSection({ events }) {
-            const [activeTab, setActiveTab] = useState('badges');
-            const completed = events.filter(e => e.completed);
-            const totalDoneCount = completed.length;
-            const dakaDone = events.filter(e => e.type === 'daka' && e.completed).length;
-            const curriculumDone = events.filter(e => e.type === 'curriculum' && e.completed).length;
-
-            const hasEarlyBirdBird = completed.some(e => {
-                const [h, m] = e.startTime.split(':').map(Number);
-                return h < 8 || (h === 8 && m <= 30);
-            });
-
-            const busySubDoneTasks = events.filter(e => e.type === 'daka').reduce((acc, curr) => acc + (curr.dakaSubitems?.filter(s => s.completed).length || 0), 0);
-
-            const badgesList = [
-                { id: 'novice', name: '萌新魔法学徒 🎒', desc: '开始小公主的第一步！你解开了时间的初级密码！', unlocked: totalDoneCount >= 1, goal: '完成 1 项小计划', emoji: '🎒', color: 'bg-emerald-50 border-emerald-300 text-emerald-800' },
-                { id: 'streaker', name: '自律城堡小之星 ⭐', desc: '坚持每日打卡习惯，你正在获取令人骄傲的小超能力！', unlocked: dakaDone >= 1, goal: '完成 1 项习惯打卡', emoji: '⭐', color: 'bg-purple-50 border-purple-300 text-purple-800' },
-                { id: 'academic', name: '皇家女小学霸 📚', desc: '准时学好每一堂课，知识是翱翔时空最棒的黄金城堡飞船！', unlocked: curriculumDone >= 1, goal: '按时学完 1 门皇家课', emoji: '📚', color: 'bg-blue-50 border-blue-300 text-blue-800' },
-                { id: 'early_bird', name: '清晨百灵乌歌姬 🌅', desc: '早起学习身体倍棒！清晨露珠为你唱歌！', unlocked: hasEarlyBirdBird, goal: '早于 08:30 搞定 1 件事', emoji: '🌅', color: 'bg-amber-50 border-amber-300 text-amber-800' },
-                { id: 'busy_bee', name: '劳动光荣小蜜蜂 🧹', desc: '不怕困难！连打卡底下的细小目标都被你通盘击破！', unlocked: busySubDoneTasks >= 2, goal: '搞定 2 个打卡子任务', emoji: '🧹', color: 'bg-pink-50 border-pink-300 text-pink-850' },
-                { id: 'champion', name: '皇家自律领主 🏆', desc: '了不起！你累计达成了大量目标，全城堡都在为你鼓掌！', unlocked: totalDoneCount >= 4, goal: '累计完成 4 项计划', emoji: '🏆', color: 'bg-rose-50 border-rose-300 text-rose-800' }
-            ];
-
-            const unlockedCount = badgesList.filter(b => b.unlocked).length;
-
-            const getEvaluationRating = () => {
-                if (totalDoneCount === 0) return { title: "见习时光指挥官", desc: "还没建立打卡，点击记一笔魔法设定属于你自己的计划书吧！", tip: "💡 建议: 先从大声背唐诗和扫一扫书桌开始，迈向卓越！" };
-                if (totalDoneCount >= 5) return { title: "🥇 闪亮皇家大魔法师", desc: "了不起！在时光中展现了极强的自律精神，你简直是效率的模范化身！", tip: "💡 提示: 完美极了，可以请爸爸妈妈额外给你一些草莓蛋糕奖励喔！" };
-                return { title: "🥈 勤勤恳恳时见习生", desc: "已经在慢慢和时间做朋友了，完成率也在稳步提高！你做得很棒！", tip: "💡 建议: 把厚厚的书本内容拆成可口的草莓子项目，一个个咬碎！" };
-            };
-
-            const evalInfo = getEvaluationRating();
-
-            // Compile past 7 days micro bar charts
-            const getPastDays = () => {
-                const list = [];
-                for (let i = 6; i >= 0; i--) {
-                    const d = new Date();
-                    d.setDate(d.getDate() - i);
-                    list.push(d);
-                }
-                return list;
-            };
-
-            const dayStats = getPastDays().map(date => {
-                const dStr = formatDate(date);
-                const dayEvs = events.filter(e => e.date === dStr);
-                const done = dayEvs.filter(e => e.completed).length;
-                return {
-                    label: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()],
-                    total: dayEvs.length,
-                    done,
-                    percent: dayEvs.length > 0 ? Math.round((done / dayEvs.length) * 100) : 0
-                };
-            });
-
-            return (
-                <div className="bg-[#fffdf5] rounded-3xl border-4 border-pink-300 p-5 shadow-[5px_5px_0px_0px_#db2777]">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-pink-100 pb-3 mb-4 gap-3">
-                        <h4 className="text-md font-extrabold text-pink-700 flex items-center gap-1.5 font-serif">
-                            <span>🏰 自律城堡成长乐园 (Growth Center)</span>
-                            <span className="text-[9px] bg-pink-100 border text-pink-700 px-2.5 py-0.2 rounded-full font-bold">复盘 & 勋章</span>
-                        </h4>
-
-                        <div className="flex items-center p-0.5 bg-white border-2 border-pink-300 rounded-xl self-start">
-                            <button onClick={() => setActiveTab('badges')} className={`px-3 py-1 rounded-lg text-2xs font-extrabold flex items-center gap-0.5 ${activeTab === 'badges' ? 'bg-amber-300 text-slate-800 font-bold' : 'text-slate-500'}`}>🎖️ 勋章墙 ({unlockedCount}/{badgesList.length})</button>
-                            <button onClick={() => setActiveTab('review')} className={`px-3 py-1 rounded-lg text-2xs font-extrabold flex items-center gap-0.5 ${activeTab === 'review' ? 'bg-amber-300 text-slate-800 font-bold' : 'text-slate-500'}`}>📈 复盘大本营</button>
-                        </div>
-                    </div>
-
-                    {activeTab === 'badges' ? (
-                        <div className="space-y-4">
-                            <div className="bg-amber-50 rounded-2xl border-2 border-dashed border-amber-350 p-3 text-amber-900 text-xs font-bold leading-relaxed">
-                                <span className="text-xl animate-bounce">🎖️</span>
-                                每一滴辛勤努力的汗水，都会在此点亮闪耀的城堡卡通纪念勋章哦！快快达成右上角的勋章目标，收集全系列成就奖励，送给未来的自己吧！
-                            </div>
-
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                                {badgesList.map(badge => (
-                                    <div key={badge.id} className={`p-3.5 rounded-2xl border-2 border-pink-300 flex flex-col items-center justify-between text-center relative shadow-[3px_3px_0px_0px_#db2777] ${badge.unlocked ? badge.color : 'bg-stone-50 text-stone-400 border-stone-200 grayscale opacity-60'}`}>
-                                        <div className={`w-12 h-12 rounded-full border border-dashed flex items-center justify-center text-2xl bg-white mb-2 ${badge.unlocked ? 'border-amber-400' : 'border-stone-300'}`}>
-                                            {badge.unlocked ? badge.emoji : '🔒'}
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-extrabold leading-tight">{badge.name.split(' ')[0]}</p>
-                                            <p className="text-[8px] opacity-75 mt-0.5">{badge.goal}</p>
-                                        </div>
-                                        <div className="mt-2 text-[8px] px-2 py-0.2 rounded-full border font-bold text-center">
-                                            {badge.unlocked ? '✓ 已获得' : '未解锁'}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                            <div className="lg:col-span-7 bg-white rounded-2xl border-2 border-pink-200 p-4 shadow-[2px_2px_0px_0px_#db2777]">
-                                <h5 className="text-[11px] font-bold text-pink-700 block mb-1">📊 本周魔法进度积木 (7日打卡图表示意)：</h5>
-                                <div className="flex items-end justify-between h-32 gap-1 px-1 pt-3 font-mono border-b border-pink-50">
-                                    {dayStats.map((st, idx) => (
-                                        <div key={idx} className="flex-grow flex flex-col items-center h-full justify-end relative group">
-                                            <span className="hidden group-hover:block absolute bottom-full bg-slate-800 text-white text-[8.5px] p-1 rounded white-nowrap z-20">打卡 {st.done}/{st.total}</span>
-                                            {st.total > 0 ? (
-                                                <div className={`w-full rounded-t border-t-2 border-x-2 border-pink-350 shadow-sm ${st.percent === 100 ? 'bg-emerald-300' : st.percent >= 50 ? 'bg-purple-300' : 'bg-amber-300'}`} style={{ height: `${st.percent}%` }} />
-                                            ) : (
-                                                <div className="w-full h-[4px] bg-slate-100 rounded border border-stone-200" />
-                                            )}
-                                            <span className="text-[8.5px] font-bold text-pink-500 whitespace-nowrap mt-2">{st.label}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <p className="text-[9.5px] font-bold text-pink-400 mt-2 block text-center">💡 城堡里的领航者：今日你正在一点点征服浩瀚的时间海洋！🚀</p>
-                            </div>
-
-                            <div className="lg:col-span-5 bg-[#fffdfa] border-2 border-pink-200 p-4 rounded-2xl shadow-[2px_2px_0px_0px_#db2777] flex flex-col justify-between">
-                                <div>
-                                    <h5 className="text-xs font-bold text-pink-850">🧙‍♂️ 时光精灵智慧物语评：</h5>
-                                    <p className="text-xs font-bold text-purple-900 mt-1 leading-snug">『 {evalInfo.title} 』</p>
-                                    <p className="text-[11px] text-slate-655 font-bold leading-normal mt-1 block">{evalInfo.desc}</p>
-                                </div>
-                                <p className="text-[10px] text-amber-700 font-bold border-t border-dashed border-pink-100 pt-2.5 mt-2">{evalInfo.tip}</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        // COMPONENT: EventModal
-        function EventModal({ isOpen, onClose, onSave, onDelete, eventToEdit, initialDate, initialTime }) {
-            const [title, setTitle] = useState('');
-            const [type, setType] = useState('regular');
-            const [date, setDate] = useState('');
-            const [startTime, setStartTime] = useState('08:00');
-            const [duration, setDuration] = useState(30);
-            const [customColor, setCustomColor] = useState('');
-            const [notes, setNotes] = useState('');
-            const [dakaMode, setDakaMode] = useState('all');
-            const [dakaSubitems, setDakaSubitems] = useState([]);
-            const [newSub, setNewSub] = useState('');
-            const [teacher, setTeacher] = useState('');
-            const [location, setLocation] = useState('');
-
-            useEffect(() => {
-                if (eventToEdit) {
-                    setTitle(eventToEdit.title);
-                    setType(eventToEdit.type);
-                    setDate(eventToEdit.date);
-                    setStartTime(eventToEdit.startTime);
-                    setDuration(eventToEdit.estimatedDuration || 30);
-                    setCustomColor(eventToEdit.textColor || '');
-                    setNotes(eventToEdit.notes || '');
-                    setDakaMode(eventToEdit.dakaMode || 'all');
-                    setDakaSubitems(eventToEdit.dakaSubitems || []);
-                    setTeacher(eventToEdit.teacher || '');
-                    setLocation(eventToEdit.location || '');
-                } else {
-                    setTitle('');
-                    setType('regular');
-                    setDate(initialDate || new Date().toISOString().split('T')[0]);
-                    setStartTime(initialTime || '08:00');
-                    setDuration(45);
-                    setCustomColor('');
-                    setNotes('');
-                    setDakaMode('all');
-                    setDakaSubitems([]);
-                    setTeacher('');
-                    setLocation('');
-                }
-            }, [eventToEdit, isOpen, initialDate, initialTime]);
-
-            const handleTypeChange = (newType) => {
-                setType(newType);
-                if (newType === 'daka' && dakaSubitems.length === 0) {
-                    setDakaSubitems([
-                        { id: 'sb-1', name: '大声背唐诗一首 📖', completed: false },
-                        { id: 'sb-2', name: '背5个新英语单词 🔠', completed: false },
-                        { id: 'sb-3', name: '整理好自己的一格书包桌 🎒', completed: false },
-                    ]);
-                }
-            };
-
-            const handleAddSub = () => {
-                if (!newSub.trim()) return;
-                setDakaSubitems([...dakaSubitems, { id: Math.random().toString(36).substring(2,7), name: newSub.trim(), completed: false }]);
-                setNewSub('');
-            };
-
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                if (!title.trim()) return;
-                onSave({
-                    id: eventToEdit?.id,
-                    title: title.trim(),
-                    type,
-                    date,
-                    startTime,
-                    estimatedDuration: Number(duration),
-                    textColor: customColor,
-                    notes: notes.trim(),
-                    ...(type === 'daka' ? { dakaSubitems, dakaMode } : {}),
-                    ...(type === 'curriculum' ? { teacher, location } : {}),
-                    completed: eventToEdit?.completed ?? false
-                });
-            };
-
-            if (!isOpen) return null;
-
-            return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-                    <div className="w-full max-w-lg bg-[#fffdf5] rounded-3xl border-4 border-pink-300 p-6 shadow-[8px_8px_0px_0px_#db2777] overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="flex items-center justify-between pb-3 border-b-2 border-pink-100 shrink-0">
-                            <h4 className="text-lg font-bold font-serif text-pink-700 flex items-center gap-1">✨ {eventToEdit ? '修订皇室计划' : '添加新的小梦想'}</h4>
-                            <button onClick={onClose} className="p-1 rounded-full border border-pink-200 hover:bg-rose-50 cursor-pointer"><Icon name="X" className="w-5 h-5 text-pink-700" /></button>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto py-4 space-y-4 pr-1 scrollbar-thin text-xs font-bold text-slate-700 text-left">
-                            {/* Type chooser */}
-                            <div>
-                                <label className="block text-pink-700 mb-1.5">🎁 选择卡片事项魔法类型：</label>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                    {Object.keys(EVENT_COLORS).map(key => {
-                                        const spec = EVENT_COLORS[key];
-                                        return (
-                                            <button key={key} type="button" onClick={() => handleTypeChange(key)} className={`p-2 rounded-xl border-2 flex flex-col items-center justify-center transition cursor-pointer ${type === key ? 'bg-pink-100 border-pink-400 text-pink-900 shadow-md' : 'bg-white border-pink-100 text-slate-500'}`}>
-                                                <span className="text-2xl mb-1">{spec.emoji}</span>
-                                                <span className="text-[10px]">{spec.label}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* Title */}
-                            <div>
-                                <label className="block mb-1 text-slate-600">🎈 魔法事件名称：</label>
-                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="如：练钢琴、拼积木、上英语课" className="w-full px-3 py-2 rounded-xl border border-pink-300" required />
-                            </div>
-
-                            {/* Date time */}
-                            <div className="grid grid-cols-2 gap-3 animate-fade-in">
-                                <div>
-                                    <label className="block mb-1 text-slate-600">📅 上课日期：</label>
-                                    <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-pink-200" required />
-                                </div>
-                                <div>
-                                    <label className="block mb-1 text-slate-600">⏰ 起始时间：</label>
-                                    <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full px-3 py-1.5 rounded-xl border border-pink-200" required />
-                                </div>
-                            </div>
-
-                            {/* Duration slider */}
-                            <div>
-                                <label className="block mb-1 text-slate-600">⏱️ 这件事大概需要： <span className="text-pink-600 font-extrabold">{duration}</span> 分钟</label>
-                                <input type="range" min="5" max="180" step="5" value={duration} onChange={e => setDuration(Number(e.target.value))} className="w-full accent-pink-500 cursor-pointer" />
-                                <div className="flex gap-1.5 mt-1 overflow-x-auto py-1.5 scrollbar-none">
-                                    {[15, 30, 45, 60, 90, 120].map(dr => (
-                                        <button key={dr} type="button" onClick={() => setDuration(dr)} className={`text-[9px] px-2.5 py-0.5 rounded-full border shrink-0 ${duration === dr ? 'bg-pink-100 border-pink-400 text-pink-800' : 'bg-white'}`}>{dr}分钟</button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Sub items */}
-                            {type === 'daka' && (
-                                <div className="bg-purple-50/50 p-3 rounded-2xl border border-purple-200 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-purple-900 font-bold flex items-center gap-1"><Icon name="CheckSquare" /> 打卡子任务：</span>
-                                        <div className="flex bg-white rounded-lg p-0.5 border border-purple-200">
-                                            <button type="button" onClick={() => setDakaMode('all')} className={`text-[9px] px-2 py-0.5 rounded ${dakaMode === 'all' ? 'bg-purple-600 text-white' : 'text-slate-500'}`}>全部完成</button>
-                                            <button type="button" onClick={() => setDakaMode('any')} className={`text-[9px] px-2 py-0.5 rounded ${dakaMode === 'any' ? 'bg-purple-600 text-white' : 'text-slate-500'}`}>完成任意</button>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        {dakaSubitems.map(s => (
-                                            <div key={s.id} className="flex items-center justify-between p-1.5 bg-white rounded-lg border border-purple-100">
-                                                <span className="text-[10px]">{s.name}</span>
-                                                <button type="button" onClick={() => setDakaSubitems(dakaSubitems.filter(it=>it.id!==s.id))} className="text-purple-400 hover:text-red-500"><Icon name="Trash2" className="w-3.5 h-3.5" /></button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="flex gap-1">
-                                        <input type="text" value={newSub} onChange={e => setNewSub(e.target.value)} placeholder="如：自己搬椅子归位 🧸" className="flex-grow px-2 py-1 text-[10.5px] rounded border" />
-                                        <button type="button" onClick={handleAddSub} className="bg-purple-100 px-3 py-1 text-purple-800 border rounded font-bold text-[10px]">加</button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Extra Course elements */}
-                            {type === 'curriculum' && (
-                                <div className="bg-emerald-50/50 p-3 border border-emerald-250 rounded-2xl grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label className="text-[10px] text-emerald-800">👤 授课老师 / 魔法大咖：</label>
-                                        <input type="text" value={teacher} onChange={e => setTeacher(e.target.value)} className="w-full px-2 py-1 bg-white border border-emerald-200 rounded text-[10.5px]" placeholder="辛德瑞拉老师" />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] text-emerald-800">📍 专属上课地点：</label>
-                                        <input type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full px-2 py-1 bg-white border border-emerald-200 rounded text-[10.5px]" placeholder="梦幻舞池/操场" />
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Color picker */}
-                            <div>
-                                <label className="block mb-1 text-slate-600">🎨 小卡片字样预设颜色：</label>
-                                <div className="flex flex-wrap gap-1.5 items-center">
-                                    {[
-                                        { val: '', label: '预置颜色', style: 'bg-slate-200' },
-                                        { val: '#ef4444', label: '苹果红', style: 'bg-red-500' },
-                                        { val: '#f97316', label: '阳光橙', style: 'bg-orange-500' },
-                                        { val: '#10b981', label: '森林绿', style: 'bg-emerald-500' },
-                                        { val: '#3b82f6', label: '天空蓝', style: 'bg-blue-500' },
-                                        { val: '#8b5cf6', label: '葡萄紫', style: 'bg-purple-500' },
-                                        { val: '#ec4899', label: '玫瑰粉', style: 'bg-pink-500' }
-                                    ].map(color => (
-                                        <button key={color.val} type="button" onClick={() => setCustomColor(color.val)} className={`w-6 h-6 rounded-full ${color.style} ${customColor === color.val ? 'ring-2 ring-slate-800 border' : ''}`} title={color.label} />
-                                    ))}
-                                    <span className="text-[10px] border border-pink-200 p-1.5 rounded bg-white shrink-0 ml-2 animate-pulse" style={{ color: customColor || EVENT_COLORS[type].fillColor }}>字样效果展示</span>
-                                </div>
-                            </div>
-
-                            {/* Notes */}
-                            <div>
-                                <label className="block mb-1 text-slate-600">📝 贴心小笔记 (贴心小纸条)：</label>
-                                <textarea value={notes} onChange={e => setNotes(e.target.value)} rows="2" placeholder="记得要准备什么呢？带好皇家图书和练习本哦！" className="w-full px-3 py-1.5 rounded-xl border border-pink-300" />
-                            </div>
-                        </form>
-
-                        <div className="pt-3 border-t flex justify-between shrink-0">
-                            {eventToEdit ? (
-                                <button type="button" onClick={() => onDelete(eventToEdit.id)} className="px-4 py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-xl border font-bold flex items-center gap-1">
-                                    <Icon name="Trash2" /> 扔掉
-                                </button>
-                            ) : <div />}
-                            <div className="flex gap-2">
-                                <button type="button" onClick={onClose} className="px-4 py-2 hover:bg-slate-50 border rounded-xl font-bold">拒绝</button>
-                                <button type="button" onClick={handleSubmit} className="px-5 py-2 bg-yellow-300 hover:bg-yellow-400 text-pink-900 font-bold border-2 border-pink-300 rounded-xl shadow">🎉 施法准备完毕！</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // MAIN ROOT COMPONENT: App
-        function App() {
-            const [events, setEvents] = useState([]);
-            const [currentDate, setCurrentDate] = useState(new Date());
-            const [viewMode, setViewMode] = useState('month');
-            const [isModalOpen, setIsModalOpen] = useState(false);
-            const [eventToEdit, setEventToEdit] = useState(null);
-            const [draggedItem, setDraggedItem] = useState(null);
-
-            useEffect(() => {
-                const saved = localStorage.getItem('kid_calendar_events');
-                if (saved) {
-                    try {
-                        setEvents(JSON.parse(saved));
-                        return;
-                    } catch(e) {
-                        console.error("Database parsing failed, resetting...");
-                    }
-                }
-
-                // Initial Seed events relative to today
-                const todayStr = formatDate(new Date());
-                const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = formatDate(tomorrow);
-
-                const defaults = [
-                    { id: 'init-1', title: '皇家文学 📖 辛弃疾词解说', type: 'curriculum', date: todayStr, startTime: '08:30', estimatedDuration: 45, completed: true, teacher: '明月先生', location: '朝露殿' },
-                    { id: 'init-2', title: '优雅礼仪 👑 皇家行礼初通关', type: 'curriculum', date: todayStr, startTime: '09:00', estimatedDuration: 45, completed: false, teacher: '贝拉仙女', location: '水晶舞池', notes: '此课程与文学时间稍微重叠啦！试试用鼠标拖动我来避开冲突吧！冲突解决后红色高亮就会消失哦。' },
-                    { id: 'init-3', title: '练钢琴 🎹 贝多芬《欢乐颂》', type: 'regular', date: todayStr, startTime: '16:00', estimatedDuration: 40, completed: false, notes: '老师说要慢弹！' },
-                    { id: 'init-4', title: '整理画笔 🌌 收拾书包明日画画', type: 'reminder', date: todayStr, startTime: '21:00', estimatedDuration: 15, completed: false },
-                    { id: 'init-5', title: '早晨智慧小习惯打卡 ⭐', type: 'daka', date: todayStr, startTime: '07:30', estimatedDuration: 30, completed: false, dakaMode: 'all', dakaSubitems: [
-                        { id: 'sb-1', name: '大声背唐诗一首 📖', completed: true },
-                        { id: 'sb-2', name: '大声背英语单词五个 🎧', completed: false },
-                        { id: 'sb-3', name: '口算挑战一页 💯', completed: false }
-                    ]}
-                ];
-                setEvents(defaults);
-                localStorage.setItem('kid_calendar_events', JSON.stringify(defaults));
-            }, []);
-
-            const saveEventsState = (newEvs) => {
-                setEvents(newEvs);
-                localStorage.setItem('kid_calendar_events', JSON.stringify(newEvs));
-            };
-
-            const handleSaveEvent = (data) => {
-                if (data.id) {
-                    const u = events.map(e => e.id === data.id ? { ...e, ...data } : e);
-                    saveEventsState(u);
-                } else {
-                    const fresh = { ...data, id: Math.random().toString(36).substring(2, 9) };
-                    saveEventsState([...events, fresh]);
-                }
-                setIsModalOpen(false);
-                setEventToEdit(null);
-            };
-
-            const handleDeleteEvent = (id) => {
-                const u = events.filter(e => e.id !== id);
-                saveEventsState(u);
-                setIsModalOpen(false);
-                setEventToEdit(null);
-            };
-
-            const handleUpdateEventDirect = (updated) => {
-                const u = events.map(e => e.id === updated.id ? updated : e);
-                saveEventsState(u);
-            };
-
-            const handleEventMove = (eventId, newDate, newTime) => {
-                const u = events.map(e => e.id === eventId ? { ...e, date: newDate, ...(newTime ? { startTime: newTime } : {}) } : e);
-                saveEventsState(u);
-            };
-
-            const handleOpenAddDaka = (dateStr) => {
-                setEventToEdit({
-                    id: '', title: '新好习惯打卡 ⭐', type: 'daka', date: dateStr || formatDate(currentDate), startTime: '08:00', estimatedDuration: 30, completed: false, dakaMode: 'all', dakaSubitems: [
-                        { id: '1', name: '大声朗读英语单词 🔠', completed: false },
-                        { id: '2', name: '多喝一杯温暖牛奶 🥛', completed: false },
-                        { id: '3', name: '自主静心课外阅读 📖', completed: false },
-                    ]
-                });
-                setIsModalOpen(true);
-            };
-
-            return (
-                <div className="p-3 sm:p-6 pb-12 max-w-7xl mx-auto space-y-6">
-                    {/* Header */}
-                    <CalendarHeader
-                        viewMode={viewMode}
-                        setViewMode={setViewMode}
-                        currentDate={currentDate}
-                        setCurrentDate={setCurrentDate}
-                        onAddEventClick={() => { setEventToEdit(null); setIsModalOpen(true); }}
-                        events={events}
-                    />
-
-                    {/* Routing Renders */}
-                    <div className="relative">
-                        {viewMode === 'month' && (
-                            <MonthView
-                                currentDate={currentDate}
-                                events={events}
-                                onEventClick={event => { setEventToEdit(event); setIsModalOpen(true); }}
-                                onAddEventClick={date => { setEventToEdit(null); setIsModalOpen(true); }}
-                                onEventMove={handleEventMove}
-                                setDraggedItem={setDraggedItem}
-                                draggedItem={draggedItem}
-                                onDayClick={day => { setCurrentDate(day); setViewMode('day'); }}
-                            />
-                        )}
-
-                        {viewMode === 'week' && (
-                            <WeekView
-                                currentDate={currentDate}
-                                events={events}
-                                onEventClick={event => { setEventToEdit(event); setIsModalOpen(true); }}
-                                onAddEventClick={(date, time) => { setEventToEdit(null); setIsModalOpen(true); }}
-                                onEventMove={handleEventMove}
-                                setDraggedItem={setDraggedItem}
-                                draggedItem={draggedItem}
-                                onDayClick={day => { setCurrentDate(day); setViewMode('day'); }}
-                            />
-                        )}
-
-                        {viewMode === 'day' && (
-                            <DayView
-                                currentDate={currentDate}
-                                events={events}
-                                onEventClick={event => { setEventToEdit(event); setIsModalOpen(true); }}
-                                onAddEventClick={(date, time) => { setEventToEdit(null); setIsModalOpen(true); }}
-                                onEventMove={handleEventMove}
-                                onUpdateEvent={handleUpdateEventDirect}
-                                setDraggedItem={setDraggedItem}
-                                draggedItem={draggedItem}
-                            />
-                        )}
-
-                        {viewMode === 'dakaPanel' && (
-                            <DakaPanel
-                                events={events}
-                                onUpdateEvent={handleUpdateEventDirect}
-                                onAddDakaClick={handleOpenAddDaka}
-                                onEventClick={event => { setEventToEdit(event); setIsModalOpen(true); }}
-                            />
-                        )}
-
-                        {viewMode === 'curriculumView' && (
-                            <CurriculumView
-                                currentDate={currentDate}
-                                events={events}
-                                onSaveEvent={handleSaveEvent}
-                                onDeleteEvent={handleDeleteEvent}
-                                onUpdateEvent={handleUpdateEventDirect}
-                            />
-                        )}
-                    </div>
-
-                    {/* Rewards badges */}
-                    <RewardSection events={events} />
-
-                    {/* Footer instructions */}
-                    <div className="bg-[#fffdf8] border-4 border-pink-300 rounded-3xl p-6 shadow-[5px_5px_0px_0px_#db2777] text-left">
-                        <h4 className="text-sm font-bold font-serif text-pink-700 flex items-center gap-1.5 border-b-2 border-pink-100 pb-2 mb-4">
-                            👸 皇家公主时间魔法宝典使用指南：
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {USER_GUIDE.map((guide, idx) => (
-                                <div key={idx} className="flex items-start gap-2.5 p-3 rounded-2xl border bg-white hover:border-pink-300 transition shadow-sm">
-                                    <span className="text-2xl select-none shrink-0">{guide.emoji}</span>
-                                    <p className="text-[11px] font-bold text-pink-900 leading-relaxed">{guide.text}</p>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="mt-5 border-t border-dashed border-pink-100 pt-3 flex flex-wrap justify-between text-[11px] font-extrabold text-pink-400">
-                            <span>✨ 用心打造的专属儿童自律时间魔法盒</span>
-                            <span>Created with Google AI Studio & Babel Standalone</span>
-                        </div>
-                    </div>
-
-                    {/* Popups Event creator */}
-                    <EventModal
-                        isOpen={isModalOpen}
-                        onClose={() => { setIsModalOpen(false); setEventToEdit(null); }}
-                        onSave={handleSaveEvent}
-                        onDelete={handleDeleteEvent}
-                        eventToEdit={eventToEdit}
-                        initialDate={formatDate(currentDate)}
-                    />
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+        refreshAll();
+      };
+    });
+    list.querySelectorAll("[data-edit]").forEach(el => {
+      el.onclick = () => openTaskModal(getTask(el.dataset.edit));
+    });
+  }
+  updatePointsUI();
+}
+
+/* ---- 事项管理（增/改/删） ---- */
+let editingTaskId = null;
+let freqType = "daily";
+let freqDaysSel = new Set();
+
+function openTaskModal(task) {
+  editingTaskId = task ? task.id : null;
+  $("taskModalTitle").textContent = task ? "✏️ 编辑事项" : "✨ 新增打卡事项";
+  $("taskName").value = task ? task.name : "";
+  $("taskIcon").value = task ? (task.icon || "") : "";
+  $("taskPoints").value = task ? task.points : "";
+  freqType = task ? task.freqType : "daily";
+  freqDaysSel = new Set(task ? task.freqDays : [1, 3, 5]);
+  renderFreqUI();
+  $("taskModal").classList.add("show");
+  if (!task) $("taskName").focus();
+}
+
+function renderFreqUI() {
+  $("freqDaily").classList.toggle("on", freqType === "daily");
+  $("freqWeek").classList.toggle("on", freqType === "week");
+  $("weekChips").style.display = freqType === "week" ? "flex" : "none";
+  $("weekChips").innerHTML = WEEK_CN.map((w, i) =>
+    `<button type="button" class="${freqDaysSel.has(i) ? "on" : ""}" data-w="${i}">${w}</button>`).join("");
+  $("weekChips").querySelectorAll("button").forEach(b => {
+    b.onclick = () => {
+      const i = +b.dataset.w;
+      freqDaysSel.has(i) ? freqDaysSel.delete(i) : freqDaysSel.add(i);
+      renderFreqUI();
+    };
+  });
+}
+$("freqDaily").onclick = () => { freqType = "daily"; renderFreqUI(); };
+$("freqWeek").onclick = () => { freqType = "week"; renderFreqUI(); };
+
+$("addTaskBtn").onclick = () => openTaskModal(null);
+$("taskCancel").onclick = () => $("taskModal").classList.remove("show");
+$("taskSave").onclick = () => {
+  const name = $("taskName").value.trim();
+  const icon = $("taskIcon").value.trim() || "✅";
+  const points = parseInt($("taskPoints").value, 10);
+  if (!name) { toast("先给它起个名字吧 ✏️"); return; }
+  if (!points || points < 1) { toast("星星数量要填 1 以上哦"); return; }
+  if (freqType === "week" && !freqDaysSel.size) { toast("选一下每周哪几天要做吧"); return; }
+  const data = { name, icon, points, freqType, freqDays: [...freqDaysSel].sort() };
+  if (editingTaskId) {
+    Object.assign(getTask(editingTaskId), data);
+    toast("事项已经更新啦 ✏️");
+  } else {
+    db.tasks.push(Object.assign({ id: uid() }, data));
+    toast("新事项创建成功 ✅");
+  }
+  save();
+  $("taskModal").classList.remove("show");
+  refreshAll();
+};
+
+/* ---- 临时加减分 ---- */
+$("customBtn").onclick = () => {
+  $("customName").value = ""; $("customPoints").value = "";
+  $("customModal").classList.add("show");
+  $("customName").focus();
+};
+$("customCancel").onclick = () => $("customModal").classList.remove("show");
+$("customSave").onclick = () => {
+  const name = $("customName").value.trim();
+  const pts = parseInt($("customPoints").value, 10);
+  if (!name) { toast("说说做了什么呀 ✏️"); return; }
+  if (isNaN(pts) || pts === 0) { toast("星星数填一下（加分正数，扣分负数）"); return; }
+  addCustom(name, pts);
+  $("customModal").classList.remove("show");
+  if (pts > 0) { party(["✨", "💖", "⭐"]); toast(`「${name}」+${pts} 星星 ✨`); }
+  else toast(`「${name}」${pts} 星星，下次注意哦～`);
+  refreshAll();
+};
+
+/* ---- 补卡 ---- */
+let makeupDate = null;
+const makeupSel = new Set();
+$("makeupBtn").onclick = () => {
+  const box = $("makeupDays");
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  makeupDate = null; makeupSel.clear();
+  box.innerHTML = "";
+  for (let d = 1; d <= daysInMonth; d++) {
+    const s = `${y}-${pad(m + 1)}-${pad(d)}`;
+    const st = dayStatus(s);
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "makeup-day"; b.textContent = d;
+    b.disabled = isFuture(s) || st.due === 0 || (st.due > 0 && st.done === st.due);
+    if (st.due > 0 && st.done === st.due) b.textContent = "✓";
+    b.onclick = () => {
+      box.querySelectorAll(".makeup-day").forEach(x => x.classList.remove("selected"));
+      b.classList.add("selected"); makeupDate = s; renderMakeupTasks();
+    };
+    box.appendChild(b);
+  }
+  $("makeupTasks").innerHTML = `<div class="empty" style="padding:10px 0">先选一个日期吧～</div>`;
+  $("makeupModal").classList.add("show");
+};
+function renderMakeupTasks() {
+  const box = $("makeupTasks");
+  const due = dueTasksOn(makeupDate).filter(t => !taskDone(makeupDate, t.id));
+  box.innerHTML = due.length ? due.map(t => `
+    <label class="makeup-task">
+      <input type="checkbox" value="${t.id}">
+      <span>${t.icon || "✅"} ${t.name}</span>
+      <span style="margin-left:auto;color:var(--accent);font-weight:800">+${t.points}</span>
+    </label>`).join("") : `<div class="empty" style="padding:10px 0">这一天没有要补的事项哦</div>`;
+  box.querySelectorAll("input").forEach(cb => {
+    cb.onchange = () => cb.checked ? makeupSel.add(cb.value) : makeupSel.delete(cb.value);
+  });
+}
+$("makeupCancel").onclick = () => $("makeupModal").classList.remove("show");
+$("makeupConfirm").onclick = () => {
+  if (!makeupDate) { toast("先选一个日期吧"); return; }
+  if (!makeupSel.size) { toast("勾选一下要补的事项"); return; }
+  if (db.points < 20) { toast("星星不够 20 颗，补不了卡哦"); return; }
+  let ok = 0;
+  for (const id of makeupSel) { if (doTaskCheckin(makeupDate, id, true) === true) ok++; }
+  $("makeupModal").classList.remove("show");
+  if (ok) { party(["🗓️", "✨", "🌸"]); toast(`补卡成功：${makeupDate.replace(/-/g, "/")}（${ok} 项，-20 星星）`); }
+  else toast("补卡失败，星星不够哦");
+  refreshAll();
+};
+
+/* ---- 非打卡奖励：渲染与交互 ---- */
+let editingBonusId = null;
+
+function renderBonuses() {
+  const list = $("bonusList");
+  list.innerHTML = db.bonuses.length ? db.bonuses.map(b => `
+    <div class="bonus-item">
+      <div class="t-icon">${b.icon || "🏆"}</div>
+      <div class="t-info" data-editbonus="${b.id}">
+        <div class="t-name">${b.name}</div>
+        <div class="t-meta">${b.points >= 0 ? "奖励" : "扣分"} · <span class="pts" style="${b.points < 0 ? "color:var(--danger)" : ""}">${b.points >= 0 ? "+" : ""}${b.points} 星星</span></div>
+      </div>
+      <button class="btn small ${b.points >= 0 ? "mint" : "pink"}" data-award="${b.id}">${b.points >= 0 ? "领星星" : "扣分"}</button>
+    </div>`).join("") : `<div class="empty">还没有奖励项目，点「＋ 新奖励」创建一个吧，比如「考试 100 分 +50」💯</div>`;
+
+  list.querySelectorAll("[data-award]").forEach(btn => {
+    btn.onclick = () => {
+      const b = getBonus(btn.dataset.award);
+      const rec = awardBonus(btn.dataset.award);
+      if (!rec) return;
+      if (b.points >= 0) {
+        party(b.points >= 30 ? ["🎉", "💯", "⭐", "🌸", "✨", "👏"] : ["✨", "🌸", "⭐"]);
+        toast(`${b.icon || "🏆"} ${b.name}，+${b.points} 星星 🎉`);
+      } else {
+        toast(`${b.icon || "🏆"} ${b.name}，${b.points} 星星，下次加油～`);
+      }
+      refreshAll();
+    };
+  });
+  list.querySelectorAll("[data-editbonus]").forEach(el => {
+    el.onclick = () => openBonusModal(getBonus(el.dataset.editbonus));
+  });
+
+  const rl = $("bonusRecords");
+  const recs = db.records.filter(r => r.type === "bonus").slice(0, 30);
+  rl.innerHTML = recs.length ? recs.map(r => {
+    const d = new Date(r.date);
+    return `<div class="record">
+      <div>${r.icon || "🏆"} ${r.desc}
+        <div class="t">${d.getMonth()+1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <span class="pts ${r.points < 0 ? "neg" : ""}">${r.points >= 0 ? "+" : ""}${r.points}</span>
+        <button class="btn danger-ghost" data-undobonus="${r.id}">撤回</button>
+      </div>
+    </div>`;
+  }).join("") : `<div class="empty">还没有奖励记录哦</div>`;
+  rl.querySelectorAll("[data-undobonus]").forEach(btn => {
+    btn.onclick = () => {
+      if (!confirm("要撤回这条奖励吗？星星会一起收回哦")) return;
+      undoBonus(btn.dataset.undobonus);
+      toast("已撤回这条奖励 ↩️");
+      refreshAll();
+    };
+  });
+}
+
+function openBonusModal(b) {
+  editingBonusId = b ? b.id : null;
+  $("bonusModalTitle").textContent = b ? "✏️ 编辑奖励项目" : "🏆 新增奖励项目";
+  $("bonusName").value = b ? b.name : "";
+  $("bonusIcon").value = b ? (b.icon || "") : "";
+  $("bonusPoints").value = b ? b.points : "";
+  $("bonusDelWrap").innerHTML = b
+    ? `<button class="btn danger-ghost" id="bonusDelete" style="width:100%;margin-top:11px;padding:11px;font-size:13.5px">删除这个奖励项目</button>`
+    : "";
+  $("bonusModal").classList.add("show");
+  if (!b) $("bonusName").focus();
+}
+
+$("addBonusBtn").onclick = () => openBonusModal(null);
+$("bonusCancel").onclick = () => $("bonusModal").classList.remove("show");
+$("bonusSave").onclick = () => {
+  const name = $("bonusName").value.trim();
+  const icon = $("bonusIcon").value.trim() || "🏆";
+  const points = parseInt($("bonusPoints").value, 10);
+  if (!name) { toast("先给它起个名字吧 ✏️"); return; }
+  if (isNaN(points) || points === 0) { toast("星星数填一下（奖励正数，扣分负数）"); return; }
+  if (editingBonusId) { Object.assign(getBonus(editingBonusId), { name, icon, points }); toast("奖励项目更新好啦 ✏️"); }
+  else { db.bonuses.push({ id: uid(), name, icon, points }); toast("新奖励创建成功 🏆"); }
+  save();
+  $("bonusModal").classList.remove("show");
+  refreshAll();
+};
+$("customBtn2").onclick = () => $("customBtn").click();
+
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "taskDelete") {
+    if (!editingTaskId) return;
+    if (!confirm("确定删掉这个事项吗？以前的记录会留在小记录里。")) return;
+    db.tasks = db.tasks.filter(t => t.id !== editingTaskId);
+    save();
+    $("taskModal").classList.remove("show");
+    toast("事项已删掉 🗑️");
+    refreshAll();
+  }
+  if (e.target && e.target.id === "bonusDelete") {
+    if (!editingBonusId) return;
+    if (!confirm("确定删掉这个奖励项目吗？以前的记录会留着。")) return;
+    db.bonuses = db.bonuses.filter(b => b.id !== editingBonusId);
+    save();
+    $("bonusModal").classList.remove("show");
+    toast("奖励项目已删掉 🗑️");
+    refreshAll();
+  }
+});
+
+/* ---- 记录 ---- */
+function renderRecords() {
+  const list = $("recordList");
+  const recent = db.records.slice(0, 20);
+  list.innerHTML = recent.length ? recent.map(r => {
+    const d = new Date(r.date);
+    return `<div class="record">
+      <div>${r.icon || "•"} ${r.desc}
+        <div class="t">${d.getMonth()+1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}</div>
+      </div>
+      <div class="pts ${r.points < 0 ? "neg" : ""}">${r.points >= 0 ? "+" : ""}${r.points}</div>
+    </div>`;
+  }).join("") : `<div class="empty">还没有小记录，先去打个卡吧～</div>`;
+}
+
+/* ---- 兑换 ---- */
+function renderShop() {
+  const list = $("rewardList");
+  list.innerHTML = db.rewards.length ? db.rewards.map(r => `
+    <div class="reward-item">
+      <div class="info"><div class="name">${r.name}</div><div class="cost">⭐ ${r.cost} 星星</div></div>
+      <div class="ops">
+        <button class="btn small" data-redeem="${r.id}" ${db.points < r.cost ? "disabled" : ""}>兑换</button>
+        <button class="btn danger-ghost" data-del="${r.id}">删</button>
+      </div>
+    </div>`).join("") : `<div class="empty">还没有心愿，点「＋ 新心愿」写一个吧 🎀</div>`;
+
+  list.querySelectorAll("[data-redeem]").forEach(b => b.onclick = () => {
+    const r = db.rewards.find(x => x.id === b.dataset.redeem);
+    if (!r || db.points < r.cost) return;
+    db.points -= r.cost;
+    db.redeems.unshift({ date: new Date().toISOString(), name: r.name, cost: r.cost });
+    db.records.unshift({ date: new Date().toISOString(), desc: `兑换「${r.name}」`, icon: "🎁", points: -r.cost, type: "redeem" });
+    save();
+    party(["🎁", "🎀", "💖", "✨"]);
+    toast(`兑换成功：「${r.name}」🎉`);
+    refreshAll();
+  });
+  list.querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
+    if (!confirm("要删掉这个心愿吗？")) return;
+    db.rewards = db.rewards.filter(x => x.id !== b.dataset.del);
+    save(); renderShop();
+  });
+
+  const rl = $("redeemList");
+  rl.innerHTML = db.redeems.length ? db.redeems.map(r => {
+    const d = new Date(r.date);
+    return `<div class="record"><div>${r.name}<div class="t">${d.getMonth()+1}月${d.getDate()}日</div></div><div class="pts neg">-${r.cost}</div></div>`;
+  }).join("") : `<div class="empty">还没有兑换过东西哦</div>`;
+}
+
+/* ---- 页面切换 ---- */
+const pageTitles = { "page-calendar": "🌸 日历", "page-checkin": "✅ 今日打卡", "page-bonus": "🏆 奖励", "page-shop": "🎀 兑换" };
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    $(tab.dataset.page).classList.add("active");
+    $("pageTitle").textContent = pageTitles[tab.dataset.page];
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+});
+
+function refreshAll() {
+  renderCalendar(); renderToday(); renderBonuses(); renderShop(); renderRecords();
+}
+
+refreshAll();
+
+/* ---- PWA 注册 ---- */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
 </body>
 </html>
