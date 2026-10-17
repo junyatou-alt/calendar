@@ -320,6 +320,17 @@
   }
   .week-chips button.on { background: linear-gradient(135deg, #ffb3d1, #b98cff); color: #fff; border-color: transparent; }
 
+  .seg.four button { padding: 11px 4px; font-size: 12.5px; }
+  .month-chips { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 12px; }
+  .month-chips button {
+    aspect-ratio: 1; border-radius: 50%; border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text-2); font-size: 12px; cursor: pointer;
+    font-family: var(--font); font-weight: 800; transition: all .18s;
+  }
+  .month-chips button.on { background: linear-gradient(135deg, #ffb3d1, #b98cff); color: #fff; border-color: transparent; }
+  .month-chips button:disabled { opacity: .25; cursor: not-allowed; }
+  .hint { font-size: 11.5px; color: var(--text-2); font-weight: 700; margin: -6px 0 10px; }
+
   .makeup-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px; }
   .makeup-day {
     aspect-ratio: 1; border-radius: 50%; border: 1.5px solid var(--border); background: var(--bg);
@@ -507,11 +518,18 @@
     <div class="field-label">完成一次奖励多少星星</div>
     <input type="number" id="taskPoints" placeholder="比如 10" min="1">
     <div class="field-label">多久做一次</div>
-    <div class="seg">
-      <button id="freqDaily" class="on" type="button">每天都要</button>
-      <button id="freqWeek" type="button">只在某些天</button>
+    <div class="seg four">
+      <button id="freqDaily" class="on" type="button">每天</button>
+      <button id="freqWeek" type="button">每周</button>
+      <button id="freqMonth" type="button">每月</button>
+      <button id="freqCustom" type="button">自定义</button>
     </div>
     <div class="week-chips" id="weekChips" style="display:none"></div>
+    <div class="month-chips" id="monthChips" style="display:none"></div>
+    <div id="customFreqWrap" style="display:none">
+      <div class="field-label">每隔多少天做一次</div>
+      <input type="number" id="freqInterval" placeholder="比如 2 表示隔一天一次" min="1" max="365">
+    </div>
     <div class="row">
       <button class="btn ghost" id="taskCancel">取消</button>
       <button class="btn" id="taskSave">保存</button>
@@ -534,6 +552,22 @@
       <button class="btn" id="bonusSave">保存</button>
     </div>
     <div id="bonusDelWrap"></div>
+  </div>
+</div>
+
+<!-- 心愿编辑弹窗 -->
+<div class="modal-mask" id="rewardModal">
+  <div class="modal">
+    <h3 id="rewardModalTitle">🎀 新增小心愿</h3>
+    <div class="field-label">心愿名称</div>
+    <input type="text" id="rewardName" placeholder="比如：一个心愿小礼物 / 去游乐园" maxlength="24">
+    <div class="field-label">需要多少星星才能换</div>
+    <input type="number" id="rewardCost" placeholder="比如 100" min="1">
+    <div class="row">
+      <button class="btn ghost" id="rewardCancel">取消</button>
+      <button class="btn" id="rewardSave">保存</button>
+    </div>
+    <div id="rewardDelWrap"></div>
   </div>
 </div>
 
@@ -630,8 +664,21 @@ const getBonus = (id) => db.bonuses.find(b => b.id === id);
 const isFuture = (s) => s > todayS();
 
 function taskDueOn(task, s) {
-  if (task.freqType === "daily") return true;
-  return task.freqDays.includes(new Date(s + "T00:00:00").getDay());
+  const d = new Date(s + "T00:00:00");
+  if (task.freqType === "week") return (task.freqDays || []).includes(d.getDay());
+  if (task.freqType === "month") {
+    const day = d.getDate();
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    // 选了 29/30/31 号但当月没有这一天时，自动落在当月最后一天
+    return (task.monthDays || []).some(md => day === md || (md > daysInMonth && day === daysInMonth));
+  }
+  if (task.freqType === "custom") {
+    const base = task.startDate || todayS();
+    if (s < base) return false;
+    const diff = Math.round((d - new Date(base + "T00:00:00")) / 86400000);
+    return diff % Math.max(1, task.interval || 1) === 0;
+  }
+  return true; // daily
 }
 const dueTasksOn = (s) => db.tasks.filter(t => taskDueOn(t, s));
 const taskDone = (s, id) => !!(db.checkins[s] && db.checkins[s][id]);
@@ -864,9 +911,19 @@ $("nextMonth").onclick = () => { viewMonth++; if (viewMonth > 11) { viewMonth = 
 
 /* ---- 今日打卡 ---- */
 function freqLabel(task) {
-  if (task.freqType === "daily") return "每天";
-  if (!task.freqDays.length) return "某些天";
-  return "每周" + task.freqDays.slice().sort().map(d => WEEK_CN[d]).join("、");
+  if (task.freqType === "week") {
+    if (!(task.freqDays || []).length) return "每周";
+    return "每周" + task.freqDays.slice().sort().map(d => WEEK_CN[d]).join("、");
+  }
+  if (task.freqType === "month") {
+    if (!(task.monthDays || []).length) return "每月";
+    return "每月 " + task.monthDays.slice().sort((a, b) => a - b).join("、") + " 号";
+  }
+  if (task.freqType === "custom") {
+    const n = Math.max(1, task.interval || 1);
+    return n === 1 ? "每天" : `每 ${n} 天一次`;
+  }
+  return "每天";
 }
 
 function renderToday() {
@@ -919,17 +976,24 @@ function renderToday() {
 
 /* ---- 事项管理（增/改/删） ---- */
 let editingTaskId = null;
+let editingTaskStart = null;
 let freqType = "daily";
 let freqDaysSel = new Set();
+let monthDaysSel = new Set();
+let freqIntervalVal = 2;
 
 function openTaskModal(task) {
   editingTaskId = task ? task.id : null;
+  editingTaskStart = task && task.startDate ? task.startDate : null;
   $("taskModalTitle").textContent = task ? "✏️ 编辑事项" : "✨ 新增打卡事项";
   $("taskName").value = task ? task.name : "";
   $("taskIcon").value = task ? (task.icon || "") : "";
   $("taskPoints").value = task ? task.points : "";
-  freqType = task ? task.freqType : "daily";
-  freqDaysSel = new Set(task ? task.freqDays : [1, 3, 5]);
+  freqType = task ? (task.freqType || "daily") : "daily";
+  freqDaysSel = new Set(task && task.freqDays ? task.freqDays : [1, 3, 5]);
+  monthDaysSel = new Set(task && task.monthDays ? task.monthDays : [1]);
+  freqIntervalVal = task && task.interval ? task.interval : 2;
+  $("freqInterval").value = freqIntervalVal;
   renderFreqUI();
   $("taskModal").classList.add("show");
   if (!task) $("taskName").focus();
@@ -938,7 +1002,13 @@ function openTaskModal(task) {
 function renderFreqUI() {
   $("freqDaily").classList.toggle("on", freqType === "daily");
   $("freqWeek").classList.toggle("on", freqType === "week");
+  $("freqMonth").classList.toggle("on", freqType === "month");
+  $("freqCustom").classList.toggle("on", freqType === "custom");
+
   $("weekChips").style.display = freqType === "week" ? "flex" : "none";
+  $("monthChips").style.display = freqType === "month" ? "grid" : "none";
+  $("customFreqWrap").style.display = freqType === "custom" ? "block" : "none";
+
   $("weekChips").innerHTML = WEEK_CN.map((w, i) =>
     `<button type="button" class="${freqDaysSel.has(i) ? "on" : ""}" data-w="${i}">${w}</button>`).join("");
   $("weekChips").querySelectorAll("button").forEach(b => {
@@ -948,9 +1018,22 @@ function renderFreqUI() {
       renderFreqUI();
     };
   });
+
+  $("monthChips").innerHTML = Array.from({ length: 31 }, (_, i) => i + 1).map(d =>
+    `<button type="button" class="${monthDaysSel.has(d) ? "on" : ""}" data-d="${d}">${d}</button>`).join("");
+  $("monthChips").querySelectorAll("button").forEach(b => {
+    b.onclick = () => {
+      const d = +b.dataset.d;
+      monthDaysSel.has(d) ? monthDaysSel.delete(d) : monthDaysSel.add(d);
+      renderFreqUI();
+    };
+  });
 }
 $("freqDaily").onclick = () => { freqType = "daily"; renderFreqUI(); };
 $("freqWeek").onclick = () => { freqType = "week"; renderFreqUI(); };
+$("freqMonth").onclick = () => { freqType = "month"; renderFreqUI(); };
+$("freqCustom").onclick = () => { freqType = "custom"; renderFreqUI(); };
+$("freqInterval").oninput = () => { freqIntervalVal = parseInt($("freqInterval").value, 10) || 0; };
 
 $("addTaskBtn").onclick = () => openTaskModal(null);
 $("taskCancel").onclick = () => $("taskModal").classList.remove("show");
@@ -961,7 +1044,20 @@ $("taskSave").onclick = () => {
   if (!name) { toast("先给它起个名字吧 ✏️"); return; }
   if (!points || points < 1) { toast("星星数量要填 1 以上哦"); return; }
   if (freqType === "week" && !freqDaysSel.size) { toast("选一下每周哪几天要做吧"); return; }
-  const data = { name, icon, points, freqType, freqDays: [...freqDaysSel].sort() };
+  if (freqType === "month" && !monthDaysSel.size) { toast("选一下每月几号要做吧"); return; }
+  const interval = parseInt($("freqInterval").value, 10);
+  if (freqType === "custom" && (!interval || interval < 1)) { toast("填一下每隔多少天做一次"); return; }
+
+  const data = {
+    name, icon, points, freqType,
+    freqDays: freqType === "week" ? [...freqDaysSel].sort() : [],
+    monthDays: freqType === "month" ? [...monthDaysSel].sort((a, b) => a - b) : [],
+    interval: freqType === "custom" ? Math.min(365, interval) : 0,
+  };
+  // 自定义频率需要一个起算日，编辑时沿用原来的，避免周期被重置
+  if (freqType === "custom") data.startDate = editingTaskStart || todayS();
+  else if (editingTaskStart) data.startDate = editingTaskStart;
+
   if (editingTaskId) {
     Object.assign(getTask(editingTaskId), data);
     toast("事项已经更新啦 ✏️");
@@ -1169,16 +1265,68 @@ function renderRecords() {
 }
 
 /* ---- 兑换 ---- */
+/* ---- 心愿（奖励兑换项）管理 ---- */
+let editingRewardId = null;
+
+function openRewardModal(r) {
+  editingRewardId = r ? r.id : null;
+  $("rewardModalTitle").textContent = r ? "✏️ 编辑小心愿" : "🎀 新增小心愿";
+  $("rewardName").value = r ? r.name : "";
+  $("rewardCost").value = r ? r.cost : "";
+  $("rewardDelWrap").innerHTML = r
+    ? `<button class="btn danger-ghost" id="rewardDelete" style="width:100%;margin-top:11px;padding:11px;font-size:13.5px">删除这个心愿</button>`
+    : "";
+  $("rewardModal").classList.add("show");
+  if (!r) $("rewardName").focus();
+}
+
+$("addRewardBtn").onclick = () => openRewardModal(null);
+$("rewardCancel").onclick = () => $("rewardModal").classList.remove("show");
+$("rewardSave").onclick = () => {
+  const name = $("rewardName").value.trim();
+  const cost = parseInt($("rewardCost").value, 10);
+  if (!name) { toast("给心愿起个名字吧 🎀"); return; }
+  if (!cost || cost < 1) { toast("需要多少星星要填 1 以上哦"); return; }
+  if (editingRewardId) {
+    Object.assign(db.rewards.find(x => x.id === editingRewardId), { name, cost });
+    toast("心愿更新好啦 ✏️");
+  } else {
+    db.rewards.push({ id: "r" + Date.now(), name, cost });
+    toast("新心愿创建成功 🎀");
+  }
+  save();
+  $("rewardModal").classList.remove("show");
+  renderShop();
+};
+
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "rewardDelete") {
+    if (!editingRewardId) return;
+    if (!confirm("确定删掉这个心愿吗？")) return;
+    db.rewards = db.rewards.filter(x => x.id !== editingRewardId);
+    save();
+    $("rewardModal").classList.remove("show");
+    toast("心愿已删掉 🗑️");
+    renderShop();
+  }
+});
+
 function renderShop() {
   const list = $("rewardList");
   list.innerHTML = db.rewards.length ? db.rewards.map(r => `
     <div class="reward-item">
-      <div class="info"><div class="name">${r.name}</div><div class="cost">⭐ ${r.cost} 星星</div></div>
+      <div class="info" data-editreward="${r.id}" style="cursor:pointer;flex:1;min-width:0">
+        <div class="name">${r.name}</div><div class="cost">⭐ ${r.cost} 星星</div>
+      </div>
       <div class="ops">
         <button class="btn small" data-redeem="${r.id}" ${db.points < r.cost ? "disabled" : ""}>兑换</button>
         <button class="btn danger-ghost" data-del="${r.id}">删</button>
       </div>
     </div>`).join("") : `<div class="empty">还没有心愿，点「＋ 新心愿」写一个吧 🎀</div>`;
+
+  list.querySelectorAll("[data-editreward]").forEach(el => {
+    el.onclick = () => openRewardModal(db.rewards.find(r => r.id === el.dataset.editreward));
+  });
 
   list.querySelectorAll("[data-redeem]").forEach(b => b.onclick = () => {
     const r = db.rewards.find(x => x.id === b.dataset.redeem);
